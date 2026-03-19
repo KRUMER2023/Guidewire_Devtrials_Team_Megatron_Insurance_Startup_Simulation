@@ -19,7 +19,7 @@ We explicitly reject expensive third-party identity providers. Gig workers alrea
 Upon authentication, our FastAPI backend instantly fetches the verified payload from the simulated Zomato Partner API. This provisions the AI models with rich, tamper-proof historical data:
 * `rider_id`: Unique database identifier.
 * `primary_h3_zones`: An array of the top H3 Hexagon IDs where the rider operates 80% of the time, establishing their baseline spatial risk.
-* `vehicle_class`: Classifies the worker's asset (e.g., `EV_YULU` vs. `ICE_MOTORBIKE`). This is critical for the AI baseline pricing, as EV riders carry a ~₹20/day operating cost versus ~₹250/day for ICE riders.
+* `vehicle_class`: Classifies the worker's asset (e.g., `EV_YULU` vs. `PETROL_BIKE`). This is critical for the AI baseline pricing, as EV riders carry a ~₹20/day operating cost versus ~₹250/day for ICE riders.
 * `30_day_delivery_avg`: Used to calculate the worker's **Parametric Consistency Multiplier**, ensuring high-volume workers receive proportionally higher payouts during a disruption.
 
 ### 1.3 The Weekly Financial Mandate (Hackathon Constraint Compliance)
