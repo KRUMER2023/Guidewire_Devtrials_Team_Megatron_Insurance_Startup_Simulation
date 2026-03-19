@@ -1,0 +1,14 @@
+COPYRIGHT AND TERMS OF USE
+
+Copyright (c) 2026 Krunal. All Rights Reserved.
+
+This repository and its contents (including but not limited to source code, documentation, architectural diagrams, and financial models) are the intellectual property of the author. 
+
+1. ALL RIGHTS RESERVED
+No part of this software, source code, or documentation may be reproduced, distributed, modified, or transmitted in any form or by any means, without the prior written permission of the copyright owner. You may not use this project for commercial purposes, copy its proprietary logic, or deploy it as your own application.
+
+2. HACKATHON EVALUATION EXCEPTION
+Explicit permission is hereby granted ONLY to the official organizers, judges, and authorized personnel of the "Guidewire DEVTrails 2026" hackathon. Authorized personnel are permitted to view, download, compile, and execute this code strictly for the purpose of evaluating the Phase 1, Phase 2, and Phase 3 submissions.
+
+3. DISCLAIMER
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE.
