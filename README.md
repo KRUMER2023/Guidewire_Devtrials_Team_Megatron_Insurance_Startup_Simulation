@@ -171,5 +171,5 @@ This dashboard is the startup's operational survival tool for the DEVTrails simu
 
 ---
 
-> **© 2026 Krunal. All Rights Reserved.**
+> **© 2026 Krunal, Nipun, Aditya (Team MEGATRON). All Rights Reserved.**
 > *This repository is submitted exclusively for the Guidewire DEVTrails 2026 Hackathon. Unauthorized copying, modification, or commercial use of this architecture, codebase, or business logic is strictly prohibited. See the `LICENSE` file for details.*

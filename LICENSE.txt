@@ -1,6 +1,6 @@
 COPYRIGHT AND TERMS OF USE
 
-Copyright (c) 2026 Krunal. All Rights Reserved.
+Copyright (c) 2026 Krunal, Nipun, Aditya (Team MEGATRON). All Rights Reserved.
 
 This repository and its contents (including but not limited to source code, documentation, architectural diagrams, and financial models) are the intellectual property of the author. 
 
