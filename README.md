@@ -2,6 +2,7 @@
 # GigShield: Algorithmic Income Resilience
 
 **Target Persona:** Full-Time Zomato Delivery Partner (Metro City Operations)
+
 **Core Mission:** Eradicate income volatility for gig workers due to external disruptions using zero-touch, spatial-driven parametric smart contracts.
 
 
