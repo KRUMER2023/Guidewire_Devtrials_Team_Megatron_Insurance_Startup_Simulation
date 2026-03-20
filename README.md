@@ -22,6 +22,8 @@ Upon authentication, our FastAPI backend instantly fetches the verified payload 
 * `vehicle_class`: Classifies the worker's asset (e.g., `EV_YULU` vs. `PETROL_BIKE`). This is critical for the AI baseline pricing, as EV riders carry a ~₹20/day operating cost versus ~₹250/day for ICE riders.
 * `30_day_delivery_avg`: Used to calculate the worker's **Parametric Consistency Multiplier**, ensuring high-volume workers receive proportionally higher payouts during a disruption.
 
+![Img1_Persona](Images/Img1_Persona.png)
+
 ### 1.3 The Weekly Financial Mandate (Hackathon Constraint Compliance)
 To strictly adhere to the mandatory Weekly Pricing model without causing massive user churn due to manual payment friction, the onboarding concludes with an automated financial gateway.
 * **UPI AutoPay Integration:** The worker authorizes a recurring weekly mandate via a simulated Payment Gateway (e.g., Razorpay e-NACH/UPI Simulator) with a dynamic upper cap.
@@ -92,6 +94,8 @@ Polling external APIs for every single user would instantly burn our runway. Ins
 * **Agent Alpha (Deterministic Telemetry):** Pings OpenWeatherMap & TomTom Traffic APIs once every 15 minutes *per active Hexagon*.
 * **Agent Beta (NLP Civic Scraper):** Scans localized news RSS feeds every 30 minutes using regex keywords (`curfew`, `strike`, `internet shutdown`). Hits trigger a secondary LLM pipeline to extract the affected PIN codes and map them to our H3 Hexagons.
 
+![Img2_Hexagonal](Images/Img2_Hexagonal.png)
+
 ### 3.3 The Parametric Trigger Matrix (The "If")
 When ingested data crosses severe thresholds, the backend upgrades an H3 Hexagon's status. Triggers are completely divorced from vehicle repair or health coverage:
 * **Tier Orange (50% Baseline Payout): Severe Urban Waterlogging.** 
@@ -125,6 +129,9 @@ To claim a payout, a worker cannot simply declare their primary zone was flooded
 ### 4.2 Defeating GPS Spoofing via Velocity Checks
 Location-mocking applications are the biggest threat to parametric insurance. Our Redis cache proactively thwarts this via **Velocity Calculation Checksum**. 
 By evaluating the geospatial distance and timestamp sequence of a rider's last three GPS pings, the backend calculates their true travel speed. If a rider mathematically "teleports" from Zone A to Zone B (15km apart) in 4 seconds to falsely claim a flood payout, they exceed the speed of sound. The spatial engine instantly flags the claim as fraudulent, permanently shifts the account to `status: suspended`, and alerts the startup fraud division.
+
+![Img3_SpatialGrid](Images/Img3_SpatialGrid.png)
+
 
 ---
 
@@ -168,6 +175,9 @@ This dashboard is the startup's operational survival tool for the DEVTrails simu
 * **Live Loss Ratio Monitor:** A real-time gauge comparing total premium revenue collected this week against the total claims paid out.
 * **Geospatial Fraud Heatmap:** Visualizes rejected claim attempts. If a specific cluster of users in one H3 Hexagon consistently fails the GPS velocity checks, the admin can investigate organized spoofing rings.
 * **Predictive Threat Matrix:** Anticipates Next Week's likely claim volume. By aggregating the AI Hazard Engine's 7-day forecasts, the admin can proactively stage liquidity ahead of a massive anticipated city-wide storm.
+
+
+![Img4_UI](Images/Img4_UI.png)
 
 ---
 
