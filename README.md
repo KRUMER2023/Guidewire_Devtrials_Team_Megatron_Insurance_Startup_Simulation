@@ -1,7 +1,16 @@
+![Img1_Persona](Assests/Images/GigShield_Thumbnail.png)
 # GigShield: Algorithmic Income Resilience
 
 **Target Persona:** Full-Time Zomato Delivery Partner (Metro City Operations)
 **Core Mission:** Eradicate income volatility for gig workers due to external disruptions using zero-touch, spatial-driven parametric smart contracts.
+
+
+> ### 🎥 **Project Demonstration**
+> **[Click here to watch the full video on Google Drive ↗](https://drive.google.com/file/d/14z7swQW1qNsChvvBOLM9CLgNS2LtsPWG/view?usp=sharing)**
+
+[![Watch Video](https://img.shields.io/badge/Watch-Project_Video-blue?style=for-the-badge&logo=googledrive&logoColor=white)]([paste_your_google_drive_link_here](https://drive.google.com/file/d/14z7swQW1qNsChvvBOLM9CLgNS2LtsPWG/view?usp=sharing))
+
+<!-- [![Video Thumbnail](Images/GigShield_Thumbnail.png)](paste_your_google_drive_link_here) -->
 
 ---
 
@@ -22,7 +31,7 @@ Upon authentication, our FastAPI backend instantly fetches the verified payload 
 * `vehicle_class`: Classifies the worker's asset (e.g., `EV_YULU` vs. `PETROL_BIKE`). This is critical for the AI baseline pricing, as EV riders carry a ~₹20/day operating cost versus ~₹250/day for ICE riders.
 * `30_day_delivery_avg`: Used to calculate the worker's **Parametric Consistency Multiplier**, ensuring high-volume workers receive proportionally higher payouts during a disruption.
 
-![Img1_Persona](Images/Img1_Persona.png)
+![Img1_Persona](Assests/Images/Img1_Persona.png)
 
 ### 1.3 The Weekly Financial Mandate (Hackathon Constraint Compliance)
 To strictly adhere to the mandatory Weekly Pricing model without causing massive user churn due to manual payment friction, the onboarding concludes with an automated financial gateway.
@@ -94,7 +103,7 @@ Polling external APIs for every single user would instantly burn our runway. Ins
 * **Agent Alpha (Deterministic Telemetry):** Pings OpenWeatherMap & TomTom Traffic APIs once every 15 minutes *per active Hexagon*.
 * **Agent Beta (NLP Civic Scraper):** Scans localized news RSS feeds every 30 minutes using regex keywords (`curfew`, `strike`, `internet shutdown`). Hits trigger a secondary LLM pipeline to extract the affected PIN codes and map them to our H3 Hexagons.
 
-![Img2_Hexagonal](Images/Img2_Hexagonal.png)
+![Img2_Hexagonal](Assests/Images/Img2_Hexagonal.png)
 
 ### 3.3 The Parametric Trigger Matrix (The "If")
 When ingested data crosses severe thresholds, the backend upgrades an H3 Hexagon's status. Triggers are completely divorced from vehicle repair or health coverage:
@@ -130,7 +139,7 @@ To claim a payout, a worker cannot simply declare their primary zone was flooded
 Location-mocking applications are the biggest threat to parametric insurance. Our Redis cache proactively thwarts this via **Velocity Calculation Checksum**. 
 By evaluating the geospatial distance and timestamp sequence of a rider's last three GPS pings, the backend calculates their true travel speed. If a rider mathematically "teleports" from Zone A to Zone B (15km apart) in 4 seconds to falsely claim a flood payout, they exceed the speed of sound. The spatial engine instantly flags the claim as fraudulent, permanently shifts the account to `status: suspended`, and alerts the startup fraud division.
 
-![Img3_SpatialGrid](Images/Img3_SpatialGrid.png)
+![Img3_SpatialGrid](Assests/Images/Img3_SpatialGrid.png)
 
 
 ---
@@ -177,9 +186,12 @@ This dashboard is the startup's operational survival tool for the DEVTrails simu
 * **Predictive Threat Matrix:** Anticipates Next Week's likely claim volume. By aggregating the AI Hazard Engine's 7-day forecasts, the admin can proactively stage liquidity ahead of a massive anticipated city-wide storm.
 
 
-![Img4_UI](Images/Img4_UI.png)
+![Img4_UI](Assests/Images/Img4_UI.png)
+
+[Click here to watch the project video](https://drive.google.com/file/d/14z7swQW1qNsChvvBOLM9CLgNS2LtsPWG/view?usp=sharing)
+
 
 ---
 
 > **© 2026 Krunal, Nipun, Aditya (Team MEGATRON). All Rights Reserved.**
-> *This repository is submitted exclusively for the Guidewire DEVTrails 2026 Hackathon. Unauthorized copying, modification, or commercial use of this architecture, codebase, or business logic is strictly prohibited. See the `LICENSE` file for details.*
+> *This repository is submitted exclusively for the Guidewire DEVTrails 2026 Hackathon. Unauthorized copying, modification, or commercial use of this architecture, codebase, business logic, or any visual/media assets (including UI designs and linked project videos) by any outside party is strictly prohibited. See the `license.txt` file for details.*
