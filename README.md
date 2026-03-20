@@ -5,7 +5,7 @@
 **Core Mission:** Eradicate income volatility for gig workers due to external disruptions using zero-touch, spatial-driven parametric smart contracts.
 
 
-> ### 🎥 **Project Demonstration**
+> ### 🎥 **Project Overview Video**
 > **[Click here to watch the full video on Google Drive ↗](https://drive.google.com/file/d/14z7swQW1qNsChvvBOLM9CLgNS2LtsPWG/view?usp=sharing)**
 
 [![Watch Video](https://img.shields.io/badge/Watch-Project_Video-blue?style=for-the-badge&logo=googledrive&logoColor=white)]([paste_your_google_drive_link_here](https://drive.google.com/file/d/14z7swQW1qNsChvvBOLM9CLgNS2LtsPWG/view?usp=sharing))
