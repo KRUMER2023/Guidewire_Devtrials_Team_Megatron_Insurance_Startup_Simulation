@@ -9,7 +9,9 @@
 > ### 🎥 **Project Overview Video**
 > **[Click here to watch the full video on Google Drive ↗](https://drive.google.com/file/d/14z7swQW1qNsChvvBOLM9CLgNS2LtsPWG/view?usp=sharing)**
 
-[![Watch Video](https://img.shields.io/badge/Watch-Project_Video-blue?style=for-the-badge&logo=googledrive&logoColor=white)]([https://drive.google.com/file/d/14z7swQW1qNsChvvBOLM9CLgNS2LtsPWG/view?usp=sharing](https://drive.google.com/file/d/14z7swQW1qNsChvvBOLM9CLgNS2LtsPWG/view?usp=sharing))
+
+[![Watch Video](https://img.shields.io/badge/Watch-Project_Video-blue?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/14z7swQW1qNsChvvBOLM9CLgNS2LtsPWG/view?usp=sharing)
+
 
 <!-- [![Video Thumbnail](Images/GigShield_Thumbnail.png)](paste_your_google_drive_link_here) -->
 
