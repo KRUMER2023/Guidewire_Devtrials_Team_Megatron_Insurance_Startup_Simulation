@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+geoalchemy2
+asyncpg
+celery
+redis
+h3
+pydantic

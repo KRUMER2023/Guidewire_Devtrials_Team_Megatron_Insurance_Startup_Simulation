@@ -1,0 +1,66 @@
+# 🚀 Welcome to the GigShield Monorepo!
+
+Welcome to Team MEGATRON! You are about to deploy GigShield—our spatial parametric insurance platform powered by event-driven AI agents. This guide will get your local environment running the entire Dockerized stack in under 5 minutes. Let's build!
+
+## 🛠️ Prerequisites
+
+Before you begin, ensure you have the following installed on your machine:
+- **Docker Desktop**: For running the containerized microservices.
+- **Git**: To clone and manage the repository.
+- **Ollama (Optional)**: If you plan to run local LLMs instead of using Google Gemini.
+
+---
+
+## 🔐 Step 1: The Secrets Override (CRITICAL)
+
+GigShield relies on strict secrets isolation to protect our API quotas. 
+
+1. Duplicate the template file:
+   In the `GigShield` directory, copy `.env.example` to a new file named `.env`.
+   
+2. Generate your API Keys:
+   Get your personal Google Gemini API key and insert it into your new `.env` file (`GEMINI_API_KEY=your_personal_key_here`). Do the same for `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`.
+   
+3. ⚠️ **WARNING: NEVER COMMIT YOUR `.env` FILE.** It is already listed in `.gitignore`, but double-check before pushing any commits!
+
+---
+
+## 🚀 Step 2: Ignition
+
+It's time to bring the infrastructure online. Open your terminal in the `GigShield` directory (where `docker-compose.yml` lives) and run the following command to build and start all microservices:
+
+```bash
+docker-compose up --build
+```
+
+---
+
+## 🌐 Step 3: Access Points (The Matrix)
+
+Once Docker has spun up the containers, you can access the various interconnected nodes of the system to verify everything is running smoothly:
+
+- **Next.js Unified UI**: [http://localhost:3000](http://localhost:3000)
+- **FastAPI Swagger/Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **n8n Agent Workflow UI**: [http://localhost:5678](http://localhost:5678)
+
+---
+
+## 📜 Development Ground Rules
+
+To ensure smooth collaboration across the monorepo, follow these rules of engagement:
+
+- **UI devs only touch `/apps/web`:** Frontend logic, React components, and UI styling stay strictly in this directory.
+- **Backend devs only touch `/apps/server` and `n8n`:** FastAPI logic, database schemas, and AI workflows are isolated here.
+- **Never push code that breaks the Docker build:** Ensure your containers build locally before submitting a Pull Request.
+
+---
+
+## 🚨 Troubleshooting (The "Oh No" Section)
+
+If you encounter issues during setup, check these common fixes:
+
+- **Port conflicts (e.g., "Port 5432 is already in use")**: 
+  You likely have a local Postgres instance running. You must kill the local Postgres service or disable it so Docker can bind to port 5432.
+  
+- **Volume permission issues for n8n**: 
+  If n8n fails to start due to write access, ensure the `GigShield/infrastructure/n8n/local_files` directory has the correct permissions for Docker to write to it.
