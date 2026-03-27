@@ -14,9 +14,9 @@ GigShield/.env.local
 # 2. n8n LOCAL DATA & LOGS (CRITICAL)
 # =========================================
 # Ignore n8n database and logs, but keep the folder
-GigShield/infrastructure/n8n/local_files/*
-!GigShield/infrastructure/n8n/local_files/.gitkeep
-*.log
+# GigShield/infrastructure/n8n/local_files/*
+# !GigShield/infrastructure/n8n/local_files/.gitkeep
+# *.log
 
 # =========================================
 # 3. NEXT.JS & NODE (FRONTEND)
