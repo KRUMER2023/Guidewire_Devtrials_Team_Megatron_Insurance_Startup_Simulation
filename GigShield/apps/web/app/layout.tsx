@@ -13,6 +13,9 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
+            <head>
+                <script src="https://apis.mappls.com/advancedmaps/api/f0963c17a2d9362a6ab9975e12f34a00/map_sdk?layer=vector&v=3.0" crossOrigin="anonymous"></script>
+            </head>
             <body>{children}</body>
         </html>
     )

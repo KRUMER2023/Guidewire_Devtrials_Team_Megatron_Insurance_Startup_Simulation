@@ -1,3 +1,85 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+
+  .glass-card {
+    @apply bg-gradient-to-br from-[#111827]/80 to-[#0a0e17]/80 backdrop-blur-xl border border-[#31353f];
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 15px 0px rgba(99, 102, 241, 0.4);
+  }
+
+  .glow-orange {
+    box-shadow: 0 0 15px 0px rgba(249, 115, 22, 0.4);
+  }
+
+  .glow-red {
+    box-shadow: 0 0 15px 0px rgba(239, 68, 68, 0.4);
+  }
+}
+
+@keyframes mapPulseRed {
+  0% {
+    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));
+    opacity: 0.6;
+  }
+
+  50% {
+    filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.9));
+    opacity: 0.9;
+  }
+
+  100% {
+    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));
+    opacity: 0.6;
+  }
+}
+
+@keyframes mapPulseOrange {
+  0% {
+    filter: drop-shadow(0 0 5px rgba(249, 115, 22, 0.5));
+    opacity: 0.5;
+  }
+
+  50% {
+    filter: drop-shadow(0 0 15px rgba(249, 115, 22, 0.8));
+    opacity: 0.8;
+  }
+
+  100% {
+    filter: drop-shadow(0 0 5px rgba(249, 115, 22, 0.5));
+    opacity: 0.5;
+  }
+}
+
+.mapPulseRed {
+  animation: mapPulseRed 2s infinite;
+}
+
+.mapPulseOrange {
+  animation: mapPulseOrange 2s infinite;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-[#31353f] rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-indigo-500/50;
+}
