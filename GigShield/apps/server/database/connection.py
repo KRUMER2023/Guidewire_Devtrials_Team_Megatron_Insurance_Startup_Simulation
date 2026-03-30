@@ -25,7 +25,10 @@ async_session_maker = async_sessionmaker(
     autocommit=False
 )
 
-async def get_db_session():
+async def get_db():
     """Dependency for providing a database session."""
     async with async_session_maker() as session:
         yield session
+
+# Alias for backwards compatibility
+get_db_session = get_db

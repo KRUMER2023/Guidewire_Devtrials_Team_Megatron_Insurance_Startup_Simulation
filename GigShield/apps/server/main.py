@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from api import telemetry
+from api import riders
 from database.connection import get_db
 
 app = FastAPI(title="GigShield API")
@@ -43,3 +44,4 @@ def resolve_h3():
     return {"h3_index": "8828308281fffff"}
 
 app.include_router(telemetry.router)
+app.include_router(riders.router, prefix="/api/v1/riders", tags=["riders"])

@@ -15,6 +15,8 @@ export default function SpatialMapClient() {
     const mapInstanceRef = useRef<any>(null);
     const polygonsRef = useRef<Record<string, any>>({});
     const ridersRef = useRef<Record<string, any>>({});
+    // Hex search highlight polygon
+    const hexHighlightPolyRef = useRef<any>(null);
     // Hover preview polygon (follows mouse)
     const hoverPolyRef = useRef<any>(null);
     const hoverCellRef = useRef<string | null>(null);
@@ -117,15 +119,43 @@ export default function SpatialMapClient() {
         });
     }, [state.riders, mapLoaded]);
 
-    // ── Map Focus ────────────────────────────────────────────────────
+    // ── Hex Search Highlight ──────────────────────────────────────────
+    useEffect(() => {
+        if (!mapLoaded || !window.mappls || !mapInstanceRef.current) return;
+        // Remove old highlight
+        removeLayer(hexHighlightPolyRef.current);
+        hexHighlightPolyRef.current = null;
+        if (!state.highlightedHex) return;
+        // Draw new light-blue highlight at 50% opacity
+        hexHighlightPolyRef.current = addHexPoly(
+            state.highlightedHex,
+            '#38bdf8', // sky-400
+            0.5,        // fillOpacity 50%
+            0.9,        // strokeOpacity
+            2.5
+        );
+    }, [state.highlightedHex, mapLoaded]);
+
     useEffect(() => {
         if (!mapLoaded || !window.mappls || !mapInstanceRef.current || !state.focusLocation) return;
+        const map = mapInstanceRef.current;
+        const [lat, lng] = state.focusLocation.coords;
+        const ZOOM = 17;
         try {
-            const map = mapInstanceRef.current;
-            const [lat, lng] = state.focusLocation;
-            if (typeof map.flyTo === 'function') map.flyTo({ center: [lng, lat], zoom: 15, duration: 2000 });
-            else if (typeof map.panTo === 'function') { map.panTo({ lat, lng }); map.setZoom?.(15); }
-            else { map.setCenter?.({ lat, lng }); map.setZoom?.(15); }
+            // Mappls GL style
+            if (typeof map.easeTo === 'function') {
+                map.easeTo({ center: [lng, lat], zoom: ZOOM, duration: 1200 });
+                // Mapbox GL style
+            } else if (typeof map.flyTo === 'function') {
+                map.flyTo({ center: [lng, lat], zoom: ZOOM, speed: 1.4, curve: 1.4 });
+                // Mappls REST style
+            } else if (typeof map.setCenterZoom === 'function') {
+                map.setCenterZoom({ lat, lng }, ZOOM);
+                // Last resort
+            } else {
+                map.setCenter?.({ lat, lng });
+                map.setZoom?.(ZOOM);
+            }
         } catch (e) { console.warn('Map recentering failed:', e); }
     }, [state.focusLocation, mapLoaded]);
 

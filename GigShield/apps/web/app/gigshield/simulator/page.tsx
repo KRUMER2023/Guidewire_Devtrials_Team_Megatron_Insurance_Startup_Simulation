@@ -11,6 +11,7 @@ import LiquidityGauge from '../../../components/simulator/LiquidityGauge';
 import TimeWarp from '../../../components/simulator/TimeWarp';
 import { Shield } from 'lucide-react';
 import MapSearchBar from '../../../components/simulator/MapSearchBar';
+import HexSearchBar from '../../../components/simulator/HexSearchBar';
 
 function GodModeControlRoom() {
     return (
@@ -44,13 +45,14 @@ function GodModeControlRoom() {
 
                     {/* Map Overlay Stats + Search (top-left row) */}
                     <div className="absolute top-4 left-4 z-20 flex items-center space-x-2">
-                        <div className="glass px-3 py-1.5 rounded text-xs font-mono font-semibold text-white pointer-events-none">
+                        <div className="bg-[#111827]/80 backdrop-blur-md border border-[#31353f] px-3 py-1.5 rounded text-xs font-mono font-semibold text-white pointer-events-none">
                             RES: H3 (10)
                         </div>
-                        <div className="glass px-3 py-1.5 rounded text-xs font-mono font-semibold text-indigo-300 pointer-events-none">
+                        <div className="bg-[#111827]/80 backdrop-blur-md border border-[#31353f] px-3 py-1.5 rounded text-xs font-mono font-semibold text-indigo-300 pointer-events-none">
                             PROJ: VECTOR
                         </div>
                         <MapSearchBar />
+                        <HexSearchBar />
                     </div>
                 </div>
 
