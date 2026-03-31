@@ -58,6 +58,19 @@ CREATE TABLE IF NOT EXISTS payout_ledger (
 );
 
 -- ============================================================
+-- HAZARD EVENTS TABLE
+-- ============================================================
+CREATE TABLE IF NOT EXISTS hazard_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    hazard_type VARCHAR(50) NOT NULL, -- e.g., 'WATERLOGGING', 'TRAFFIC_JAM'
+    hex_index TEXT NOT NULL, -- List of H3 cells (comma-separated for the demo)
+    confidence_score DECIMAL(5, 2) DEFAULT 100.00, -- Hardcoded to 100% for the demo
+    severity INT DEFAULT 8, -- Useful for payout math (1-10)
+    is_active BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- ============================================================
 -- MOCK RIDER DATA  (10 realistic Delhi/NCR delivery partners)
 -- ============================================================
 INSERT INTO

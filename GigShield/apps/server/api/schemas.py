@@ -36,3 +36,24 @@ class RiderResponse(BaseModel):
     primary_h3_zone: str | None
 
     model_config = {"from_attributes": True}
+
+
+# ── Hazard Events ───────────────────────────────────────────────────────────────
+
+class HazardEventCreate(BaseModel):
+    hazard_type: str = Field(..., min_length=1, max_length=50)
+    hex_index: List[str] = Field(..., min_length=1)
+    confidence_score: float = Field(default=100.00, ge=0, le=100)
+    severity: int = Field(default=8, ge=1, le=10)
+
+
+class HazardEventResponse(BaseModel):
+    id: uuid.UUID
+    hazard_type: str
+    hex_index: List[str]
+    confidence_score: float
+    severity: int
+    is_active: bool
+    created_at: str  # serialized as ISO string
+
+    model_config = {"from_attributes": True}

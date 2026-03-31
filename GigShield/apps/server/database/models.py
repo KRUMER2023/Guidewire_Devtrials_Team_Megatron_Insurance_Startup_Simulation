@@ -63,3 +63,14 @@ class PayoutLedger(Base):
     status: Mapped[PayoutStatus] = mapped_column(SQLEnum(PayoutStatus), nullable=False)
 
     rider: Mapped["Rider"] = relationship("Rider", back_populates="payouts")
+
+class HazardEvent(Base):
+    __tablename__ = "hazard_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    hazard_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    hex_index: Mapped[str] = mapped_column(String, nullable=False)
+    confidence_score: Mapped[float] = mapped_column(Numeric(5, 2), default=100.00)
+    severity: Mapped[int] = mapped_column(Integer, default=8)
+    is_active: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

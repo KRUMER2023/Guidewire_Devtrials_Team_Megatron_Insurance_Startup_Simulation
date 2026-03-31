@@ -17,6 +17,16 @@ export interface Rider {
     primaryH3Zone?: string | null;
 }
 
+export interface DbHazard {
+    id: string;
+    hazard_type: string;
+    hex_index: string[]; // Changed to string array
+    confidence_score: number;
+    severity: number;
+    is_active: boolean;
+    created_at: string;
+}
+
 export interface SimulationEvent {
     id: string;
     type: string;
@@ -40,9 +50,12 @@ export interface SimulationState {
     logs: SimulationLog[];
     fundBalance: number;
     focusLocation?: { coords: [number, number]; v: number } | null;
-    hexSelectionMode: boolean;    // true = map shows wireframe hex picker
-    pendingH3Zone: string | null; // H3 cell ID clicked in picker mode
-    highlightedHex: string | null; // H3 cell highlighted by the hex search bar
+    hexSelectionMode: boolean;
+    hexSelectionType: 'RIDER' | 'HAZARD';
+    pendingH3Zone: string | null;
+    pendingHazardHexes: string[]; // New state for multiple hex selection
+    highlightedHex: string | null;
+    dbHazards: DbHazard[];
 }
 
 const initialState: SimulationState = {
@@ -53,8 +66,11 @@ const initialState: SimulationState = {
     logs: [{ id: '1', level: 'info', message: 'System Initialized - God Mode Active', timestamp: '2024-01-01T00:00:00.000Z' }],
     fundBalance: 15420000,
     hexSelectionMode: false,
+    hexSelectionType: 'RIDER',
     pendingH3Zone: null,
+    pendingHazardHexes: [],
     highlightedHex: null,
+    dbHazards: [],
 };
 
 type Action =
@@ -63,16 +79,39 @@ type Action =
     | { type: 'ADD_LOG'; payload: { level: 'info' | 'warn' | 'error'; message: string } }
     | { type: 'TOGGLE_RIDER_STATUS'; payload: { id: string } }
     | { type: 'FOCUS_LOCATION'; payload: { location: [number, number] } }
-    | { type: 'ENABLE_HEX_SELECTION' }
+    | { type: 'ENABLE_HEX_SELECTION'; payload?: { type: 'RIDER' | 'HAZARD' } }
     | { type: 'DISABLE_HEX_SELECTION' }
     | { type: 'SELECT_H3_ZONE'; payload: { cellId: string } }
+    | { type: 'TOGGLE_HAZARD_HEX'; payload: { cellId: string } } // New action for multi-select
+    | { type: 'CLEAR_PENDING_HAZARDS' }
     | { type: 'ADD_RIDER'; payload: Rider }
     | { type: 'SET_RIDERS'; payload: Rider[] }
     | { type: 'HIGHLIGHT_HEX'; payload: { cellId: string } }
-    | { type: 'CLEAR_HEX_HIGHLIGHT' };
+    | { type: 'CLEAR_HEX_HIGHLIGHT' }
+    | { type: 'SET_DB_HAZARDS'; payload: DbHazard[] }
+    | { type: 'ADD_DB_HAZARD'; payload: DbHazard }
+    | { type: 'REMOVE_DB_HAZARD'; payload: { id: string } }
+    | { type: 'TOGGLE_DB_HAZARD'; payload: { id: string; is_active: boolean } }
+    | { type: 'REMOVE_RIDER'; payload: { id: string } };
+
+function buildHexagons(hazards: DbHazard[]): Record<string, HexagonStatus> {
+    const map: Record<string, HexagonStatus> = {};
+    hazards.filter(h => h.is_active).forEach(h => {
+        h.hex_index.forEach(hex => {
+            map[hex] = h.severity >= 7 ? 'RED' : 'ORANGE';
+        });
+    });
+    return map;
+}
 
 function simulationReducer(state: SimulationState, action: Action): SimulationState {
     switch (action.type) {
+        case 'REMOVE_RIDER':
+            return {
+                ...state,
+                riders: state.riders.filter(r => r.id !== action.payload.id),
+                logs: [{ id: Date.now().toString(), level: 'info', message: `Rider ${action.payload.id.slice(0, 8)} removed from matrix.`, timestamp: new Date().toISOString() }, ...state.logs]
+            };
         case 'TRIGGER_DISASTER': {
             const newHexagons = { ...state.hexagons };
             action.payload.hexIds.forEach(id => { newHexagons[id] = action.payload.intensity; });
@@ -84,7 +123,7 @@ function simulationReducer(state: SimulationState, action: Action): SimulationSt
             };
         }
         case 'CLEAR_DISASTER':
-            return { ...state, hexagons: {}, logs: [{ id: Date.now().toString(), level: 'info', message: 'All hazards cleared.', timestamp: new Date().toISOString() }, ...state.logs] };
+            return { ...state, hexagons: buildHexagons(state.dbHazards), logs: [{ id: Date.now().toString(), level: 'info', message: 'Manual hazards cleared.', timestamp: new Date().toISOString() }, ...state.logs] };
         case 'ADD_LOG':
             return { ...state, logs: [{ id: Date.now().toString(), level: action.payload.level, message: action.payload.message, timestamp: new Date().toISOString() }, ...state.logs] };
         case 'TOGGLE_RIDER_STATUS':
@@ -96,11 +135,26 @@ function simulationReducer(state: SimulationState, action: Action): SimulationSt
         case 'FOCUS_LOCATION':
             return { ...state, focusLocation: { coords: action.payload.location, v: Date.now() } };
         case 'ENABLE_HEX_SELECTION':
-            return { ...state, hexSelectionMode: true, pendingH3Zone: null };
+            return {
+                ...state,
+                hexSelectionMode: true,
+                hexSelectionType: action.payload?.type || 'RIDER',
+                pendingH3Zone: null,
+                pendingHazardHexes: action.payload?.type === 'HAZARD' ? [] : state.pendingHazardHexes
+            };
         case 'DISABLE_HEX_SELECTION':
-            return { ...state, hexSelectionMode: false, pendingH3Zone: null };
+            return { ...state, hexSelectionMode: false, pendingH3Zone: null, pendingHazardHexes: [] };
         case 'SELECT_H3_ZONE':
             return { ...state, pendingH3Zone: action.payload.cellId, hexSelectionMode: false };
+        case 'TOGGLE_HAZARD_HEX': {
+            const current = state.pendingHazardHexes;
+            const updated = current.includes(action.payload.cellId)
+                ? current.filter(h => h !== action.payload.cellId)
+                : [...current, action.payload.cellId];
+            return { ...state, pendingHazardHexes: updated };
+        }
+        case 'CLEAR_PENDING_HAZARDS':
+            return { ...state, pendingHazardHexes: [] };
         case 'HIGHLIGHT_HEX':
             return { ...state, highlightedHex: action.payload.cellId };
         case 'CLEAR_HEX_HIGHLIGHT':
@@ -113,6 +167,42 @@ function simulationReducer(state: SimulationState, action: Action): SimulationSt
                 riders: [...state.riders, action.payload],
                 logs: [{ id: Date.now().toString(), level: 'info', message: `New rider registered: ${action.payload.name} (${action.payload.zomatoId})`, timestamp: new Date().toISOString() }, ...state.logs]
             };
+        case 'SET_DB_HAZARDS': {
+            return {
+                ...state,
+                dbHazards: action.payload,
+                hexagons: { ...buildHexagons(action.payload) },
+            };
+        }
+        case 'ADD_DB_HAZARD': {
+            const updated = [action.payload, ...state.dbHazards];
+            return {
+                ...state,
+                dbHazards: updated,
+                hexagons: { ...buildHexagons(updated) },
+                logs: [{ id: Date.now().toString(), level: 'warn', message: `Hazard created: ${action.payload.hazard_type} at ${action.payload.hex_index.join(', ')}`, timestamp: new Date().toISOString() }, ...state.logs],
+            };
+        }
+        case 'TOGGLE_DB_HAZARD': {
+            const updated = state.dbHazards.map(h =>
+                h.id === action.payload.id ? { ...h, is_active: action.payload.is_active } : h
+            );
+            return {
+                ...state,
+                dbHazards: updated,
+                hexagons: { ...buildHexagons(updated) },
+                logs: [{ id: Date.now().toString(), level: 'info', message: `Hazard ${action.payload.id.slice(0, 8)} is now ${action.payload.is_active ? 'ACTIVE' : 'INACTIVE'}.`, timestamp: new Date().toISOString() }, ...state.logs],
+            };
+        }
+        case 'REMOVE_DB_HAZARD': {
+            const updated = state.dbHazards.filter(h => h.id !== action.payload.id);
+            return {
+                ...state,
+                dbHazards: updated,
+                hexagons: { ...buildHexagons(updated) },
+                logs: [{ id: Date.now().toString(), level: 'info', message: `Hazard ${action.payload.id.slice(0, 8)} permanently purged.`, timestamp: new Date().toISOString() }, ...state.logs],
+            };
+        }
         default:
             return state;
     }

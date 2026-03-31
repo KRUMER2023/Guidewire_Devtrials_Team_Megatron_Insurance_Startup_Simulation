@@ -5,6 +5,7 @@ from sqlalchemy import text
 
 from api import telemetry
 from api import riders
+from api import hazard_events
 from database.connection import get_db
 
 app = FastAPI(title="GigShield API")
@@ -44,4 +45,5 @@ def resolve_h3():
     return {"h3_index": "8828308281fffff"}
 
 app.include_router(telemetry.router)
-app.include_router(riders.router, prefix="/api/v1/riders", tags=["riders"])
+app.include_router(riders.router, prefix="/api/v1/riders", tags=["Riders"])
+app.include_router(hazard_events.router, prefix="/api/v1/hazards", tags=["Hazard Events"])

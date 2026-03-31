@@ -61,3 +61,28 @@ async def create_rider(
         )
 
     return new_rider
+
+
+@router.delete(
+    "/{rider_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a rider",
+)
+async def delete_rider(
+    rider_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    import uuid as _uuid
+    try:
+        uid = _uuid.UUID(rider_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid rider UUID.")
+
+    result = await db.execute(select(Rider).where(Rider.id == uid))
+    rider = result.scalar_one_or_none()
+    if not rider:
+        raise HTTPException(status_code=404, detail="Rider not found.")
+
+    await db.delete(rider)
+    await db.commit()
+    return None

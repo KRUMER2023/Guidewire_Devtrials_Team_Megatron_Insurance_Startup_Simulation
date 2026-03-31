@@ -66,7 +66,7 @@ export default function SpatialMapClient() {
         const initMap = () => {
             if (!window.mappls || !mapContainerRef.current || mapInstanceRef.current) return;
             const map = new window.mappls.Map(mapContainerRef.current, {
-                center: [28.6139, 77.2090],
+                center: [22.273575, 73.160189],
                 zoom: 13,
                 layer: 'vector',
                 zoomControl: true,
@@ -159,6 +159,21 @@ export default function SpatialMapClient() {
         } catch (e) { console.warn('Map recentering failed:', e); }
     }, [state.focusLocation, mapLoaded]);
 
+    // ── Multi-Hex Hazard Selection Highlight ─────────────────────────
+    const hazardSelectionPolysRef = useRef<Record<string, any>>({});
+    useEffect(() => {
+        if (!mapLoaded || !window.mappls || !mapInstanceRef.current) return;
+        const current = state.pendingHazardHexes;
+        Object.keys(hazardSelectionPolysRef.current).forEach(id => {
+            if (!current.includes(id)) { removeLayer(hazardSelectionPolysRef.current[id]); delete hazardSelectionPolysRef.current[id]; }
+        });
+        current.forEach(id => {
+            if (!hazardSelectionPolysRef.current[id]) {
+                hazardSelectionPolysRef.current[id] = addHexPoly(id, '#22c55e', 0.5, 1, 2.5);
+            }
+        });
+    }, [state.pendingHazardHexes, mapLoaded]);
+
     // ── Hex Picker Mode ──────────────────────────────────────────────
     useEffect(() => {
         if (!mapLoaded || !window.mappls || !mapInstanceRef.current) return;
@@ -194,7 +209,6 @@ export default function SpatialMapClient() {
             const [lat, lng] = coords;
             const cellId = h3.latLngToCell(lat, lng, PICKER_RES);
 
-            // Skip redraw if same cell
             if (hoverCellRef.current === cellId) return;
             hoverCellRef.current = cellId;
 
@@ -202,21 +216,20 @@ export default function SpatialMapClient() {
             hoverPolyRef.current = addHexPoly(cellId, '#818cf8', 0.25, 0.85, 1.5);
         };
 
-        // Click: lock selection in red, remove hover preview, dispatch
         const onClick = (e: any) => {
             const coords = extractLatLng(e);
             if (!coords) return;
             const [lat, lng] = coords;
             const cellId = h3.latLngToCell(lat, lng, PICKER_RES);
 
-            // Remove hover preview
-            removeLayer(hoverPolyRef.current); hoverPolyRef.current = null; hoverCellRef.current = null;
-            // Remove previous selection
-            removeLayer(selectedPolyRef.current);
-            // Draw permanent green selection
-            selectedPolyRef.current = addHexPoly(cellId, '#22c55e', 0.5, 1, 2.5);
-
-            dispatch({ type: 'SELECT_H3_ZONE', payload: { cellId } });
+            if (state.hexSelectionType === 'HAZARD') {
+                dispatch({ type: 'TOGGLE_HAZARD_HEX', payload: { cellId } });
+            } else {
+                removeLayer(hoverPolyRef.current); hoverPolyRef.current = null; hoverCellRef.current = null;
+                removeLayer(selectedPolyRef.current);
+                selectedPolyRef.current = addHexPoly(cellId, '#22c55e', 0.5, 1, 2.5);
+                dispatch({ type: 'SELECT_H3_ZONE', payload: { cellId } });
+            }
         };
 
         mouseMoveHandlerRef.current = onMouseMove;
@@ -225,7 +238,7 @@ export default function SpatialMapClient() {
         addListener('click', onClick);
 
         return cleanup;
-    }, [state.hexSelectionMode, mapLoaded, dispatch]);
+    }, [state.hexSelectionMode, state.hexSelectionType, mapLoaded, dispatch]);
 
     // ── Render ───────────────────────────────────────────────────────
     return (
@@ -234,7 +247,9 @@ export default function SpatialMapClient() {
 
             {state.hexSelectionMode && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-[#1e1b4b]/90 backdrop-blur-md text-indigo-200 text-xs font-mono px-5 py-2.5 rounded-full border border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.35)] pointer-events-none select-none">
-                    🗺 Hover to preview · Click to lock H3 zone
+                    {state.hexSelectionType === 'HAZARD'
+                        ? '⛓ MULTI-SELECT MODE · Click hexes to toggle · Form updates live'
+                        : '🗺 SINGLE-SELECT MODE · Click to lock zone'}
                 </div>
             )}
 
