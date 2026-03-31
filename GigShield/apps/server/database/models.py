@@ -8,13 +8,55 @@ from sqlalchemy import (
     DateTime,
     Numeric,
     ForeignKey,
-    Enum as SQLEnum
+    Enum as SQLEnum,
+    Boolean,
+    Float,
+    func,
+    Index
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
     pass
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    phone: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    vehicle_type: Mapped[str] = mapped_column(String, nullable=True) # e.g., 'ELECTRIC', 'PETROL'
+
+    rider_stats: Mapped["RiderStats"] = relationship("RiderStats", back_populates="user", uselist=False)
+    activity_logs: Mapped[list["ActivityLog"]] = relationship("ActivityLog", back_populates="user")
+
+class RiderStats(Base):
+    __tablename__ = "rider_stats"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True, unique=True)
+    trust_score: Mapped[int] = mapped_column(Integer, default=85)
+    current_premium: Mapped[float] = mapped_column(Float, default=60.0)
+    total_payouts: Mapped[float] = mapped_column(Float, default=0.0)
+
+    user: Mapped["User"] = relationship("User", back_populates="rider_stats")
+
+class ActivityLog(Base):
+    __tablename__ = "activity_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    event_type: Mapped[str] = mapped_column(String, nullable=False) # e.g., 'HAZARD_ENTRY', 'PAYOUT_TRIGGERED'
+    h3_index: Mapped[str | None] = mapped_column(String(15), nullable=True)
+    amount: Mapped[float] = mapped_column(Float, default=0.0)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    user: Mapped["User"] = relationship("User", back_populates="activity_logs")
+
+    __table_args__ = (
+        Index('idx_user_activity_timestamp', "user_id", "timestamp"),
+    )
 
 class VehicleType(str, PyEnum):
     EV = "EV"

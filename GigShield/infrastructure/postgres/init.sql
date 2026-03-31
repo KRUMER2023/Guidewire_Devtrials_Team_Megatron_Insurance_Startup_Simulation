@@ -36,6 +36,42 @@ CREATE TABLE IF NOT EXISTS riders (
 );
 
 -- ============================================================
+-- USERS TABLE (New Identity System)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) UNIQUE NOT NULL,
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    vehicle_type VARCHAR(50) -- e.g., 'ELECTRIC', 'PETROL'
+);
+
+-- ============================================================
+-- RIDER STATS TABLE (1-to-1 with Users)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS rider_stats (
+    user_id UUID PRIMARY KEY REFERENCES users (id) ON DELETE CASCADE,
+    trust_score INTEGER DEFAULT 85,
+    current_premium FLOAT DEFAULT 60.0,
+    total_payouts FLOAT DEFAULT 0.0,
+    UNIQUE (user_id)
+);
+
+-- ============================================================
+-- ACTIVITY LOGS TABLE (History)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS activity_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    event_type VARCHAR(100) NOT NULL,
+    h3_index VARCHAR(15),
+    amount FLOAT DEFAULT 0.0,
+    timestamp TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_activity_timestamp ON activity_logs (user_id, timestamp);
+
+-- ============================================================
 -- POLICIES TABLE
 -- ============================================================
 CREATE TABLE IF NOT EXISTS policies (
