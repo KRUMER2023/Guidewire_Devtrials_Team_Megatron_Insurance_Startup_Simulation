@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,9 +7,17 @@ from sqlalchemy import text
 from api import telemetry
 from api import riders
 from api import hazard_events
-from database.connection import get_db
+from database.connection import get_db, engine
+from database.models import Base
 
-app = FastAPI(title="GigShield API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Ensure all tables are created on startup (HazardEvent, etc.)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+
+app = FastAPI(title="GigShield API", lifespan=lifespan)
 
 origins = [
     "http://localhost:3000",
