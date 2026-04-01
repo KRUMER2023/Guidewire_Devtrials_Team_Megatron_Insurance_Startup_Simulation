@@ -1,20 +1,32 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
-from api import telemetry
-from api import riders
-from api import hazard_events
+from api import telemetry, riders, hazard_events, admin, auth, rider, orders
 from database.connection import get_db, engine
 from database.models import Base
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure all tables are created on startup (HazardEvent, etc.)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # --- Robust DB Startup Strategy ---
+    max_retries = 5
+    retry_delay = 2
+    for attempt in range(max_retries):
+        try:
+            async with engine.begin() as conn:
+                # Ensure all tables are created on startup (HazardEvent, etc.)
+                await conn.run_sync(Base.metadata.create_all)
+            print("--- System Matrix Online: DB Connected ---")
+            break
+        except Exception as e:
+            if attempt == max_retries - 1:
+                print(f"--- FAILED TO DETACH IN MATRIX: {e} ---")
+                raise # Fail the application boot
+            print(f"--- DB Synchronization Attempt {attempt+1}/{max_retries} failed. Retrying... ---")
+            await asyncio.sleep(retry_delay)
     yield
 
 app = FastAPI(title="GigShield API", lifespan=lifespan)
@@ -56,3 +68,7 @@ def resolve_h3():
 app.include_router(telemetry.router)
 app.include_router(riders.router, prefix="/api/v1/riders", tags=["Riders"])
 app.include_router(hazard_events.router, prefix="/api/v1/hazards", tags=["Hazard Events"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(rider.router, prefix="/api/v1/rider", tags=["Rider Profile"])
+app.include_router(orders.router)

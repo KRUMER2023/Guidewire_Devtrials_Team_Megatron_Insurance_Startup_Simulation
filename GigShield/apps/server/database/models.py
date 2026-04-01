@@ -26,8 +26,12 @@ class User(Base):
     id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String, nullable=False)
     phone: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     vehicle_type: Mapped[str] = mapped_column(String, nullable=True) # e.g., 'ELECTRIC', 'PETROL'
+    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     rider_stats: Mapped["RiderStats"] = relationship("RiderStats", back_populates="user", uselist=False)
     activity_logs: Mapped[list["ActivityLog"]] = relationship("ActivityLog", back_populates="user")
@@ -46,7 +50,7 @@ class ActivityLog(Base):
     __tablename__ = "activity_logs"
 
     id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     event_type: Mapped[str] = mapped_column(String, nullable=False) # e.g., 'HAZARD_ENTRY', 'PAYOUT_TRIGGERED'
     h3_index: Mapped[str | None] = mapped_column(String(15), nullable=True)
     amount: Mapped[float] = mapped_column(Float, default=0.0)
@@ -80,6 +84,8 @@ class Rider(Base):
     vehicle_type: Mapped[VehicleType] = mapped_column(SQLEnum(VehicleType), nullable=False)
     trust_score: Mapped[int] = mapped_column(Integer, default=80)
     primary_h3_zone: Mapped[str | None] = mapped_column(String(20), index=True, nullable=True)
+    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     policies: Mapped[list["Policy"]] = relationship("Policy", back_populates="rider", cascade="all, delete-orphan")
     payouts: Mapped[list["PayoutLedger"]] = relationship("PayoutLedger", back_populates="rider", cascade="all, delete-orphan")
@@ -116,3 +122,15 @@ class HazardEvent(Base):
     severity: Mapped[int] = mapped_column(Integer, default=8)
     is_active: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+class Order(Base):
+    __tablename__ = "orders"
+
+    ord_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    order_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    zom_id: Mapped[str] = mapped_column(String(50), nullable=False)
+    pickup_latitude: Mapped[float] = mapped_column(Float, nullable=False)
+    pickup_longitude: Mapped[float] = mapped_column(Float, nullable=False)
+    delivery_latitude: Mapped[float] = mapped_column(Float, nullable=False)
+    delivery_longitude: Mapped[float] = mapped_column(Float, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

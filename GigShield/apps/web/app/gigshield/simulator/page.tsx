@@ -5,13 +5,11 @@ import { SimulationProvider } from '../../../context/SimulationContext';
 import PersonaSidebar from '../../../components/simulator/PersonaSidebar';
 import SpatialMapClient from '../../../components/simulator/SpatialMapClient';
 import EventTracker from '../../../components/simulator/EventTracker';
-import GodPanel from '../../../components/simulator/GodPanel';
 import ServerLog from '../../../components/simulator/ServerLog';
-import LiquidityGauge from '../../../components/simulator/LiquidityGauge';
-import TimeWarp from '../../../components/simulator/TimeWarp';
 import { Shield } from 'lucide-react';
 import MapSearchBar from '../../../components/simulator/MapSearchBar';
 import HexSearchBar from '../../../components/simulator/HexSearchBar';
+import OrderAssigner from '../../../components/simulator/OrderAssigner';
 
 function GodModeControlRoom() {
     return (
@@ -57,20 +55,20 @@ function GodModeControlRoom() {
                 </div>
 
                 {/* Right Sidebar (spans both rows) */}
-                <div className="row-span-2 flex flex-col overflow-hidden bg-[#0a0e17]">
-                    <div className="h-[40%] overflow-hidden">
-                        <EventTracker />
+                <div className="row-span-2 flex flex-col overflow-hidden bg-[#0a0e17] border-l border-[#31353f]">
+                    <div className="h-1/2 overflow-hidden">
+                        <OrderAssigner />
                     </div>
-                    <div className="h-[60%] border-t border-[#31353f] overflow-hidden">
-                        <GodPanel />
+                    <div className="h-1/2 overflow-hidden border-t border-[#31353f]">
+                        <EventTracker />
                     </div>
                 </div>
 
                 {/* Bottom Bar: fixed 200px row, hard-clipped */}
                 <div className="col-start-2 row-start-2 grid grid-cols-[1fr] border-t border-[#31353f] overflow-hidden h-[200px]">
-                    <div className="overflow-hidden h-full"><ServerLog /></div>
-                    <div className="hidden"><LiquidityGauge /></div>
-                    <div className="hidden"><TimeWarp /></div>
+                    <div className="overflow-hidden h-full">
+                        <ServerLog />
+                    </div>
                 </div>
             </main>
 

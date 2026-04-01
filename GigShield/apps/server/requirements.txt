@@ -1,10 +1,13 @@
 fastapi
-uvicorn
-sqlalchemy
+uvicorn[standard]
+sqlalchemy[asyncio]
 geoalchemy2
 asyncpg
 celery
 redis
 h3
-pydantic
+pydantic[email]
 python-dotenv
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart

@@ -5,11 +5,10 @@ from sqlalchemy import select
 from typing import List
 
 from database.connection import get_db
-from database.models import Rider, VehicleType
+from database.models import Rider, VehicleType, User, RiderStats
 from api.schemas import RiderCreate, RiderResponse
 
 router = APIRouter()
-
 
 @router.get(
     "/",
@@ -20,7 +19,6 @@ router = APIRouter()
 async def list_riders(db: AsyncSession = Depends(get_db)) -> List[RiderResponse]:
     result = await db.execute(select(Rider).order_by(Rider.name))
     return result.scalars().all()
-
 
 @router.post(
     "/create",
@@ -45,7 +43,8 @@ async def create_rider(
         zomato_id=payload.zomato_id,
         vehicle_type=VehicleType(payload.vehicle_type),
         primary_h3_zone=payload.primary_h3_zone,
-        # trust_score defaults to 80 as defined in the model
+        latitude=payload.latitude,
+        longitude=payload.longitude
     )
 
     db.add(new_rider)
@@ -62,7 +61,6 @@ async def create_rider(
 
     return new_rider
 
-
 @router.delete(
     "/{rider_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -78,11 +76,26 @@ async def delete_rider(
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid rider UUID.")
 
-    result = await db.execute(select(Rider).where(Rider.id == uid))
-    rider = result.scalar_one_or_none()
-    if not rider:
-        raise HTTPException(status_code=404, detail="Rider not found.")
+    # 1. Fetch simulation node
+    rider_res = await db.execute(select(Rider).where(Rider.id == uid))
+    rider = rider_res.scalar_one_or_none()
+    
+    # 2. Fetch authenticated identity
+    user_res = await db.execute(select(User).where(User.id == uid))
+    user = user_res.scalar_one_or_none()
 
-    await db.delete(rider)
+    # 3. Fetch rider stats
+    stats_res = await db.execute(select(RiderStats).where(RiderStats.user_id == uid))
+    stats = stats_res.scalar_one_or_none()
+
+    # Identity and Node must be purged together. 
+    # Activity logs survive due to SET NULL on ForeignKey in models.py
+    if rider:
+        await db.delete(rider)
+    if stats:
+        await db.delete(stats)
+    if user:
+        await db.delete(user)
+        
     await db.commit()
     return None

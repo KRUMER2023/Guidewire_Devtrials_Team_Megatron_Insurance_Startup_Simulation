@@ -19,7 +19,7 @@ services:
       - "6379:6379"
 
   n8n:
-    image: n8nio/n8n:latest
+    image: n8nio/n8n:2.14.2
     ports:
       - "5678:5678"
     environment:

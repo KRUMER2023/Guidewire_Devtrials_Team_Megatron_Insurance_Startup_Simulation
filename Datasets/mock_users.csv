@@ -1,0 +1,7 @@
+Name,Age,Zom ID,Vehicle Type,Trust Score,phone,email,password,joined at ,current premium,total payouts,Primary h3 zone,latitude,longitude
+Raju Rastogi,24,ZOM-VAD-001,EV,85,9876543210,raju@gig.com,pass123,2026-03-28,60,0,8a42ca853547fff,22.312049,73.162498
+Sunita Sharma,29,ZOM-VAD-002,EV,98,9876543211,sunita@gig.com,pass123,2025-01-10,60,0,8a42ca85348ffff,22.306432,73.163304
+Amit Patel,31,ZOM-VAD-003,PETROL,62,9876543212,amit@gig.com,pass123,2026-01-15,98.5,0,8a42ca853687fff,22.307271,73.170982
+Vikram Singh,35,ZOM-VAD-004,PETROL,75,9876543213,vikram@gig.com,pass123,2025-08-20,82,400,8a42ca85329ffff,22.313424,73.175308
+Suresh Kumar,27,ZOM-VAD-005,EV,45,9876543214,suresh@gig.com,pass123,2026-02-01,115,0,8a42ca8ed187fff,22.303742,73.182506
+Deepa Kumari,26,ZOM-VAD-006,EV,92,9876543215,deepa@gig.com,pass123,2025-05-12,68,800,8a42ca85374ffff,22.313166,73.172739

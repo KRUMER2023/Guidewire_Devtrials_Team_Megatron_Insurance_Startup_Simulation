@@ -228,7 +228,7 @@ export default function SpatialMapClient() {
                 removeLayer(hoverPolyRef.current); hoverPolyRef.current = null; hoverCellRef.current = null;
                 removeLayer(selectedPolyRef.current);
                 selectedPolyRef.current = addHexPoly(cellId, '#22c55e', 0.5, 1, 2.5);
-                dispatch({ type: 'SELECT_H3_ZONE', payload: { cellId } });
+                dispatch({ type: 'SELECT_H3_ZONE', payload: { cellId, lat, lng } });
             }
         };
 

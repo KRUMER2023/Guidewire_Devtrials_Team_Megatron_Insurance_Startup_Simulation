@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSimulation } from '../../context/SimulationContext';
-import { UserCircle, UserPlus, MapPin, X, Check, Loader2, AlertCircle, Trash2 } from 'lucide-react';
+import { UserCircle, UserPlus, MapPin, X, Check, Loader2, AlertCircle, Trash2, Eye, EyeOff } from 'lucide-react';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import * as h3 from 'h3-js';
 
@@ -11,18 +11,28 @@ const VEHICLE_TYPES = ['EV', 'PETROL'];
 
 interface NewUserForm {
     name: string;
+    email: string;
+    phone: string;
+    password: string;
     age: string;
     zomato_id: string;
     vehicle_type: string;
     primary_h3_zone: string;
+    latitude: string;
+    longitude: string;
 }
 
 const emptyForm: NewUserForm = {
     name: '',
-    age: '',
+    email: '',
+    phone: '',
+    password: '',
+    age: '24',
     zomato_id: '',
     vehicle_type: 'EV',
     primary_h3_zone: '',
+    latitude: '',
+    longitude: '',
 };
 
 function Field({
@@ -57,6 +67,8 @@ export default function PersonaSidebar() {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
+    const [showPassword, setShowPassword] = useState(false);
+
     // ── Fetch real riders from DB on mount ─────────────────────────────────────
     useEffect(() => {
         let cancelled = false;
@@ -70,7 +82,10 @@ export default function PersonaSidebar() {
 
                 const riders = data.map((r: any) => {
                     let location: [number, number] = [22.273575, 73.160189];
-                    if (r.primary_h3_zone) {
+
+                    if (r.latitude && r.longitude) {
+                        location = [r.latitude, r.longitude];
+                    } else if (r.primary_h3_zone) {
                         try {
                             const center = h3.cellToLatLng(r.primary_h3_zone);
                             location = [center[0], center[1]];
@@ -107,15 +122,21 @@ export default function PersonaSidebar() {
 
     useEffect(() => {
         if (state.pendingH3Zone) {
-            setForm(f => ({ ...f, primary_h3_zone: state.pendingH3Zone! }));
+            setForm(f => ({
+                ...f,
+                primary_h3_zone: state.pendingH3Zone!,
+                latitude: state.pendingLat ? state.pendingLat.toFixed(6) : f.latitude,
+                longitude: state.pendingLng ? state.pendingLng.toFixed(6) : f.longitude,
+            }));
         }
-    }, [state.pendingH3Zone]);
+    }, [state.pendingH3Zone, state.pendingLat, state.pendingLng]);
 
     const startAdding = () => {
         setIsAdding(true);
         setForm(emptyForm);
         setErrors({});
         setSubmitError(null);
+        setShowPassword(false);
     };
 
     const cancelAdding = () => {
@@ -133,9 +154,12 @@ export default function PersonaSidebar() {
     const validate = (): boolean => {
         const e: Partial<NewUserForm> = {};
         if (!form.name.trim()) e.name = 'Required';
+        if (!form.email.trim() || !form.email.includes('@')) e.email = 'Valid email required';
+        if (form.phone.trim().length < 10) e.phone = 'Min 10 digits';
+        if (form.password.length < 8) e.password = 'Min 8 chars';
         if (!form.age || isNaN(Number(form.age)) || Number(form.age) < 18) e.age = 'Valid age ≥ 18';
         if (!form.zomato_id.trim()) e.zomato_id = 'Required';
-        if (!form.primary_h3_zone.trim()) e.primary_h3_zone = 'Pick a zone from the map';
+        if (!form.primary_h3_zone.trim()) e.primary_h3_zone = 'Select zone from map';
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -146,15 +170,20 @@ export default function PersonaSidebar() {
         setSubmitError(null);
 
         try {
-            const res = await fetch(`${API_BASE}/api/v1/riders/create`, {
+            const res = await fetch(`${API_BASE}/api/v1/admin/create-rider`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: form.name.trim(),
+                    email: form.email.trim(),
+                    phone: form.phone.trim(),
+                    password: form.password,
+                    vehicle_type: form.vehicle_type,
                     age: Number(form.age),
                     zomato_id: form.zomato_id.trim(),
-                    vehicle_type: form.vehicle_type,
                     primary_h3_zone: form.primary_h3_zone,
+                    latitude: form.latitude ? parseFloat(form.latitude) : null,
+                    longitude: form.longitude ? parseFloat(form.longitude) : null,
                 }),
             });
 
@@ -166,9 +195,11 @@ export default function PersonaSidebar() {
             const created = await res.json();
 
             let location: [number, number] = [22.273575, 73.160189];
-            if (created.primary_h3_zone) {
+            if (form.latitude && form.longitude) {
+                location = [parseFloat(form.latitude), parseFloat(form.longitude)];
+            } else if (form.primary_h3_zone) {
                 try {
-                    const center = h3.cellToLatLng(created.primary_h3_zone);
+                    const center = h3.cellToLatLng(form.primary_h3_zone);
                     location = [center[0], center[1]];
                 } catch { /* fallback */ }
             }
@@ -178,19 +209,20 @@ export default function PersonaSidebar() {
                 payload: {
                     id: created.id,
                     name: created.name,
-                    age: created.age,
-                    zomatoId: created.zomato_id,
+                    age: Number(form.age),
+                    zomatoId: form.zomato_id.trim(),
                     vehicleType: created.vehicle_type,
-                    trustScore: created.trust_score,
+                    trustScore: 85,
                     location,
                     status: 'ACTIVE',
-                    primaryH3Zone: created.primary_h3_zone ?? null,
+                    primaryH3Zone: form.primary_h3_zone,
                 },
             });
 
             dispatch({ type: 'FOCUS_LOCATION', payload: { location } });
             setIsAdding(false);
             setForm(emptyForm);
+            dispatch({ type: 'DISABLE_HEX_SELECTION' });
         } catch (err: unknown) {
             setSubmitError(err instanceof Error ? err.message : 'Unknown error. Please try again.');
         } finally {
@@ -249,13 +281,45 @@ export default function PersonaSidebar() {
                         </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-1 min-h-0 pb-4">
-                        <Field label="Name" name="name" placeholder="Arjun Sharma"
+                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1 min-h-0 pb-4">
+                        <Field label="Full Name" name="name" placeholder="Arjun Sharma"
                             value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} error={errors.name} />
-                        <Field label="Age" name="age" type="number" placeholder="24"
-                            value={form.age} onChange={v => setForm(f => ({ ...f, age: v }))} error={errors.age} />
-                        <Field label="Zomato ID" name="zomato_id" placeholder="ZOM-R-2099"
-                            value={form.zomato_id} onChange={v => setForm(f => ({ ...f, zomato_id: v }))} error={errors.zomato_id} />
+
+                        <Field label="Email Address" name="email" type="email" placeholder="arjun@zomato.com"
+                            value={form.email} onChange={v => setForm(f => ({ ...f, email: v }))} error={errors.email} />
+
+                        <Field label="Mobile No." name="phone" placeholder="+91..."
+                            value={form.phone} onChange={v => setForm(f => ({ ...f, phone: v }))} error={errors.phone} />
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <Field label="Zomato ID" name="zomato_id" placeholder="ZOM-R-2099"
+                                value={form.zomato_id} onChange={v => setForm(f => ({ ...f, zomato_id: v }))} error={errors.zomato_id} />
+                            <Field label="Age" name="age" type="number" placeholder="24"
+                                value={form.age} onChange={v => setForm(f => ({ ...f, age: v }))} error={errors.age} />
+                        </div>
+
+                        <div className="animate-in fade-in slide-in-from-top-1 duration-300 relative">
+                            <label className="block text-[10px] font-mono font-semibold text-[#908fa0] uppercase tracking-wider mb-1">Security Key (Password)</label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={form.password}
+                                    onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                                    placeholder="••••••••"
+                                    className={`w-full bg-[#0a0e17] border ${errors.password ? 'border-red-500/60 shadow-[0_0_10px_rgba(239,68,68,0.1)]' : 'border-[#31353f]'} rounded px-2.5 py-1.5 text-xs text-white placeholder:text-[#505868] outline-none focus:border-indigo-500/60 transition-all font-mono pr-9`}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[#505868] hover:text-indigo-400 transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                </button>
+                            </div>
+                            {errors.password && <span className="text-[10px] text-red-500 font-medium mt-1 flex items-center gap-1">
+                                <AlertCircle className="w-3.5 h-3.5" /> {errors.password}
+                            </span>}
+                        </div>
 
                         <div>
                             <label className="block text-[10px] font-mono font-semibold text-[#908fa0] uppercase tracking-wider mb-1">Vehicle Module</label>
@@ -268,25 +332,33 @@ export default function PersonaSidebar() {
                             </select>
                         </div>
 
+                        <div className="mt-2">
+                            <button
+                                onClick={activateHexPicker}
+                                className={`w-full flex items-center justify-center gap-2 px-2.5 py-1.5 rounded border text-xs font-mono transition-all ${state.hexSelectionMode ? 'bg-indigo-500 border-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-[#0a0e17] border-[#31353f] text-[#908fa0] hover:border-indigo-500/60 hover:text-indigo-300'}`}
+                            >
+                                <MapPin className="w-3.5 h-3.5" />
+                                {state.hexSelectionMode ? 'SELECTING ON MAP...' : 'SELECT LOCATION'}
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <Field label="Latitude" name="latitude" placeholder="22.2..."
+                                value={form.latitude} onChange={v => setForm(f => ({ ...f, latitude: v }))} error={errors.latitude} />
+                            <Field label="Longitude" name="longitude" placeholder="73.1..."
+                                value={form.longitude} onChange={v => setForm(f => ({ ...f, longitude: v }))} error={errors.longitude} />
+                        </div>
+
                         <div>
-                            <label className="block text-[10px] font-mono font-semibold text-[#908fa0] uppercase tracking-wider mb-1">Deployment Zone</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={form.primary_h3_zone}
-                                    readOnly
-                                    placeholder="Select from matrix map"
-                                    className={`flex-1 bg-[#0a0e17] border ${errors.primary_h3_zone ? 'border-red-500/60' : 'border-[#31353f]'} rounded px-2.5 py-1.5 text-xs text-white placeholder:text-[#505868] outline-none font-mono cursor-default`}
-                                />
-                                <button
-                                    onClick={activateHexPicker}
-                                    title="Pick H3 zone from map"
-                                    className={`shrink-0 px-2.5 py-1.5 rounded border text-xs transition-colors ${state.hexSelectionMode ? 'bg-indigo-500 border-indigo-400 text-white animate-pulse' : 'bg-[#0a0e17] border-[#31353f] text-[#908fa0] hover:border-indigo-500/60 hover:text-indigo-300'}`}
-                                >
-                                    <MapPin className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
-                            {errors.primary_h3_zone && <span className="text-[10px] text-red-400 mt-1 block">{errors.primary_h3_zone}</span>}
+                            <label className="block text-[10px] font-mono font-semibold text-[#908fa0] uppercase tracking-wider mb-1">Deployment Zone (H3)</label>
+                            <input
+                                type="text"
+                                value={form.primary_h3_zone}
+                                readOnly
+                                placeholder="Matrix index will appear here"
+                                className={`w-full bg-[#0a0e17] border ${errors.primary_h3_zone ? 'border-red-500/60' : 'border-[#31353f]'} rounded px-2.5 py-1.5 text-xs text-white placeholder:text-[#505868] outline-none font-mono cursor-default`}
+                            />
+                            {errors.primary_h3_zone && <span className="text-[10px] text-red-500 font-medium mt-1 block">{errors.primary_h3_zone}</span>}
                         </div>
 
                         {submitError && (
