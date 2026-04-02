@@ -17,6 +17,17 @@ export interface Rider {
     primaryH3Zone?: string | null;
 }
 
+export interface Order {
+    ord_id: string;
+    order_name: string;
+    zom_id: string;
+    pickup_latitude: number;
+    pickup_longitude: number;
+    delivery_latitude: number;
+    delivery_longitude: number;
+    created_at: string;
+}
+
 export interface DbHazard {
     id: string;
     hazard_type: string;
@@ -58,7 +69,30 @@ export interface SimulationState {
     pendingHazardHexes: string[]; // New state for multiple hex selection
     highlightedHex: string | null;
     dbHazards: DbHazard[];
+    pickupPin: [number, number] | null;
+    deliveryPin: [number, number] | null;
+    activeTracking: boolean;
+    trackingIndex: number;
 }
+
+export const HARDCODED_PATH: [number, number][] = [
+    [22.308416, 73.167856], // 0: Spawn
+    [22.308243, 73.168576], // 1
+    [22.308095, 73.169555], // 2
+    [22.307966, 73.170413], // 3
+    [22.307881, 73.171244], // 4
+    [22.307618, 73.171399], // 5: PICKUP
+    [22.307851, 73.171645], // 6
+    [22.307758, 73.172617], // 7
+    [22.307668, 73.173668], // 8
+    [22.307578, 73.174572], // 9
+    [22.307564, 73.174777], // 10
+    [22.307557, 73.175526], // 11
+    [22.307544, 73.176213], // 12
+    [22.307559, 73.176572], // 13
+    [22.307506, 73.177080], // 14
+    [22.307499, 73.177412]  // 15: DELIVERY
+];
 
 const initialState: SimulationState = {
     riders: [],
@@ -75,6 +109,10 @@ const initialState: SimulationState = {
     pendingHazardHexes: [],
     highlightedHex: null,
     dbHazards: [],
+    pickupPin: null,
+    deliveryPin: null,
+    activeTracking: false,
+    trackingIndex: 0,
 };
 
 type Action =
@@ -88,6 +126,10 @@ type Action =
     | { type: 'SELECT_H3_ZONE'; payload: { cellId: string; lat: number; lng: number } }
     | { type: 'TOGGLE_HAZARD_HEX'; payload: { cellId: string } } // New action for multi-select
     | { type: 'CLEAR_PENDING_HAZARDS' }
+    | { type: 'CLEAR_SELECTION_PINS' }
+    | { type: 'START_TRACKING' }
+    | { type: 'UPDATE_TRACK_INDEX'; payload: number }
+    | { type: 'STOP_TRACKING' }
     | { type: 'ADD_RIDER'; payload: Rider }
     | { type: 'SET_RIDERS'; payload: Rider[] }
     | { type: 'HIGHLIGHT_HEX'; payload: { cellId: string } }
@@ -114,7 +156,7 @@ function simulationReducer(state: SimulationState, action: Action): SimulationSt
             return {
                 ...state,
                 riders: state.riders.filter(r => r.id !== action.payload.id),
-                logs: [{ id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: 'info', message: `Rider ${action.payload.id.slice(0, 8)} removed from matrix.`, timestamp: new Date().toISOString() }, ...state.logs]
+                logs: [...state.logs, { id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: 'info', message: `Rider ${action.payload.id.slice(0, 8)} removed from matrix.`, timestamp: new Date().toISOString() }]
             };
         case 'TRIGGER_DISASTER': {
             const newHexagons = { ...state.hexagons };
@@ -123,18 +165,18 @@ function simulationReducer(state: SimulationState, action: Action): SimulationSt
                 ...state,
                 hexagons: newHexagons,
                 events: [...state.events, { id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, type: 'HAZARD', intensity: action.payload.intensity, timestamp: new Date().toISOString(), location: action.payload.location }],
-                logs: [{ id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: 'warn', message: `Hazard intensity ${action.payload.intensity} triggered at [${action.payload.location[0].toFixed(4)}, ${action.payload.location[1].toFixed(4)}]`, timestamp: new Date().toISOString() }, ...state.logs]
+                logs: [...state.logs, { id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: 'warn', message: `Hazard intensity ${action.payload.intensity} triggered at [${action.payload.location[0].toFixed(4)}, ${action.payload.location[1].toFixed(4)}]`, timestamp: new Date().toISOString() }]
             };
         }
         case 'CLEAR_DISASTER':
-            return { ...state, hexagons: buildHexagons(state.dbHazards), logs: [{ id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: 'info', message: 'Manual hazards cleared.', timestamp: new Date().toISOString() }, ...state.logs] };
+            return { ...state, hexagons: buildHexagons(state.dbHazards), logs: [...state.logs, { id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: 'info', message: 'Manual hazards cleared.', timestamp: new Date().toISOString() }] };
         case 'ADD_LOG':
-            return { ...state, logs: [{ id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: action.payload.level, message: action.payload.message, timestamp: new Date().toISOString() }, ...state.logs] };
+            return { ...state, logs: [...state.logs, { id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: action.payload.level, message: action.payload.message, timestamp: new Date().toISOString() }] };
         case 'TOGGLE_RIDER_STATUS':
             return {
                 ...state,
                 riders: state.riders.map(r => r.id === action.payload.id ? { ...r, status: r.status === 'ACTIVE' ? 'IDLE' : 'ACTIVE' } : r),
-                logs: [{ id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: 'info', message: `Rider ${action.payload.id} status toggled.`, timestamp: new Date().toISOString() }, ...state.logs]
+                logs: [...state.logs, { id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: 'info', message: `Rider ${action.payload.id} status toggled.`, timestamp: new Date().toISOString() }]
             };
         case 'FOCUS_LOCATION':
             return { ...state, focusLocation: { coords: action.payload.location, v: Date.now() } };
@@ -149,7 +191,33 @@ function simulationReducer(state: SimulationState, action: Action): SimulationSt
         case 'DISABLE_HEX_SELECTION':
             return { ...state, hexSelectionMode: false, pendingH3Zone: null, pendingLat: null, pendingLng: null, pendingHazardHexes: [] };
         case 'SELECT_H3_ZONE':
-            return { ...state, pendingH3Zone: action.payload.cellId, pendingLat: action.payload.lat, pendingLng: action.payload.lng, hexSelectionMode: false };
+            const isPickup = state.hexSelectionType === 'PICKUP';
+            const isDelivery = state.hexSelectionType === 'DELIVERY';
+            return {
+                ...state,
+                pendingH3Zone: action.payload.cellId,
+                pendingLat: action.payload.lat,
+                pendingLng: action.payload.lng,
+                hexSelectionMode: false,
+                pickupPin: isPickup ? [action.payload.lat, action.payload.lng] : state.pickupPin,
+                deliveryPin: isDelivery ? [action.payload.lat, action.payload.lng] : state.deliveryPin,
+            };
+
+        case 'CLEAR_SELECTION_PINS':
+            return {
+                ...state,
+                pickupPin: null,
+                deliveryPin: null,
+                pendingH3Zone: null,
+                pendingLat: null,
+                pendingLng: null
+            };
+        case 'START_TRACKING':
+            return { ...state, activeTracking: true, trackingIndex: 0 };
+        case 'UPDATE_TRACK_INDEX':
+            return { ...state, trackingIndex: action.payload };
+        case 'STOP_TRACKING':
+            return { ...state, activeTracking: false, trackingIndex: 0 };
         case 'TOGGLE_HAZARD_HEX': {
             const current = state.pendingHazardHexes;
             const updated = current.includes(action.payload.cellId)
@@ -169,7 +237,7 @@ function simulationReducer(state: SimulationState, action: Action): SimulationSt
             return {
                 ...state,
                 riders: [...state.riders, action.payload],
-                logs: [{ id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: 'info', message: `New rider registered: ${action.payload.name} (${action.payload.zomatoId})`, timestamp: new Date().toISOString() }, ...state.logs]
+                logs: [...state.logs, { id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, level: 'info', message: `New rider registered: ${action.payload.name} (${action.payload.zomatoId})`, timestamp: new Date().toISOString() }]
             };
         case 'SET_DB_HAZARDS': {
             return {

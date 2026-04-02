@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useSimulation } from '../../context/SimulationContext';
+import { useSimulation, HARDCODED_PATH } from '../../context/SimulationContext';
 import { MapPin, Box, Save, AlertCircle, User, Check, Loader2, Plus, List, ArrowLeft, Send, Trash2 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
@@ -15,6 +15,16 @@ interface Order {
     delivery_latitude: number;
     delivery_longitude: number;
     created_at: string;
+}
+
+interface RouteResponse {
+    routes: Array<{
+        geometry: {
+            coordinates: [number, number][];
+        };
+        duration: number;
+        distance: number;
+    }>;
 }
 
 interface OrderForm {
@@ -41,13 +51,14 @@ const emptyForm: OrderForm = {
 
 export default function OrderAssigner() {
     const { state, dispatch } = useSimulation();
-    const [view, setView] = useState<'tracker' | 'create'>('tracker');
+    const [view, setView] = useState<'tracker' | 'create' | 'track'>('tracker');
     const [orders, setOrders] = useState<Order[]>([]);
     const [form, setForm] = useState<OrderForm>(emptyForm);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+
 
     // Initial load
     useEffect(() => {
@@ -125,6 +136,7 @@ export default function OrderAssigner() {
 
             // Success flow
             setForm(emptyForm);
+            dispatch({ type: 'CLEAR_SELECTION_PINS' });
             loadOrders();
             setView('tracker');
         } catch (err: any) {
@@ -135,7 +147,7 @@ export default function OrderAssigner() {
     };
 
     const handleDeleteOrder = async (ord_id: string, name: string) => {
-        if (!confirm(`Permanently delete Mission: ${name}?`)) return;
+        if (!confirm(`Permanently delete Order: ${name}?`)) return;
 
         try {
             const res = await fetch(`${API_BASE}/api/v1/orders/${ord_id}`, { method: 'DELETE' });
@@ -148,13 +160,56 @@ export default function OrderAssigner() {
         }
     };
 
+    const handleStartOrder = (order: Order) => {
+        const rider = state.riders.find((r: any) => r.zomatoId === order.zom_id);
+        const riderName = rider ? rider.name : 'Unknown Rider';
+        dispatch({ type: 'ADD_LOG', payload: { level: 'info', message: `🚀 Order Active: "${order.order_name}" tracking started for ${riderName}.` } });
+        dispatch({ type: 'START_TRACKING' });
+    };
+
+    // Simulation Loop for active tracking
+    useEffect(() => {
+        if (!state.activeTracking) return;
+
+        const interval = setInterval(() => {
+            // Check for pickup pause (Index 5 is pickup)
+            if (state.trackingIndex === 5) {
+                // To avoid multiple interval fires while pausing, we don't increment here.
+                // Instead, we just wait for the timeout below to push it to index 6.
+                return;
+            }
+
+            if (state.trackingIndex < HARDCODED_PATH.length - 1) {
+                const nextIndex = state.trackingIndex + 1;
+                dispatch({ type: 'UPDATE_TRACK_INDEX', payload: nextIndex });
+
+                // If we just reached pickup, set a timeout to "resume" after 4s (as requested)
+                if (nextIndex === 5) {
+                    // Stay at 5 for 4 seconds
+                    setTimeout(() => {
+                        dispatch({ type: 'UPDATE_TRACK_INDEX', payload: 6 });
+                    }, 4000);
+                }
+            } else {
+                // Delivery reached (Index 15)
+                dispatch({ type: 'ADD_LOG', payload: { level: 'info', message: `✅ Order Delivered! Process Complete.` } });
+                dispatch({ type: 'STOP_TRACKING' });
+                clearInterval(interval);
+            }
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [state.activeTracking, state.trackingIndex, dispatch]);
+
+
+
     const renderTracker = () => (
         <div className="flex-1 flex flex-col min-h-0">
             <div className="grid grid-cols-1 gap-3 overflow-y-auto custom-scrollbar pr-1 pb-4">
                 {orders.length === 0 && !isLoading && (
                     <div className="text-center py-12 border border-dashed border-[#31353f] rounded-xl bg-[#111827]/50">
                         <List className="w-8 h-8 text-[#31353f] mx-auto mb-3" />
-                        <p className="text-xs text-[#505868] font-mono italic">No active missions tracked</p>
+                        <p className="text-xs text-[#505868] font-mono italic">No active orders tracked</p>
                     </div>
                 )}
 
@@ -199,7 +254,10 @@ export default function OrderAssigner() {
                                     <MapPin className="w-2.5 h-2.5" /> End
                                 </div>
                             </div>
-                            <button className="text-[10px] font-bold text-indigo-400 flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-md hover:bg-indigo-500 hover:text-white transition-all shadow-lg hover:shadow-indigo-500/30">
+                            <button
+                                onClick={() => handleStartOrder(order)}
+                                className="text-[10px] font-bold text-white flex items-center gap-1.5 px-3 py-1 bg-indigo-600 hover:bg-indigo-500 border border-indigo-500/50 rounded-md transition-all shadow-lg shadow-indigo-500/20"
+                            >
                                 <Send className="w-3 h-3" /> START
                             </button>
                         </div>
@@ -208,6 +266,8 @@ export default function OrderAssigner() {
             </div>
         </div>
     );
+
+    const renderTrackOrder = () => null;
 
     const renderCreate = () => (
         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
@@ -222,7 +282,7 @@ export default function OrderAssigner() {
                 <div className="space-y-3 pt-2">
                     <div>
                         <label className="block text-[10px] font-mono font-semibold text-[#908fa0] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                            <Box className="w-3 h-3 text-indigo-400" /> Mission Name
+                            <Box className="w-3 h-3 text-indigo-400" /> Order Name
                         </label>
                         <input
                             type="text"
@@ -265,15 +325,23 @@ export default function OrderAssigner() {
                         {state.hexSelectionMode && state.hexSelectionType === 'PICKUP' ? 'SELECTING ON MAP...' : form.pickup_latitude ? 'VECTOR LOCKED' : 'LOCATE PICKUP'}
                     </button>
 
-                    <div className="grid grid-cols-2 gap-2 opacity-80">
-                        <div className="bg-[#0a0e17] border border-[#1a1c23] rounded px-2.5 py-1.5">
-                            <p className="text-[9px] text-[#505868] uppercase mb-0.5">LAT</p>
-                            <p className="text-[10px] font-mono text-white">{form.pickup_latitude || '---'}</p>
-                        </div>
-                        <div className="bg-[#0a0e17] border border-[#1a1c23] rounded px-2.5 py-1.5">
-                            <p className="text-[9px] text-[#505868] uppercase mb-0.5">LNG</p>
-                            <p className="text-[10px] font-mono text-white">{form.pickup_longitude || '---'}</p>
-                        </div>
+                    <div className="bg-[#0a0e17] border border-[#31353f] rounded px-3 py-2 opacity-90 focus-within:border-emerald-500/50 transition-all">
+                        <p className="text-[8px] text-[#505868] uppercase mb-1 font-mono">Coordinates (LAT, LNG)</p>
+                        <input
+                            type="text"
+                            value={form.pickup_latitude && form.pickup_longitude ? `${form.pickup_latitude}, ${form.pickup_longitude}` : ''}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                const parts = val.split(',');
+                                setForm(f => ({
+                                    ...f,
+                                    pickup_latitude: parts[0]?.trim() || '',
+                                    pickup_longitude: parts[1]?.trim() || ''
+                                }));
+                            }}
+                            placeholder="28.xxxxxx, 77.xxxxxx"
+                            className="w-full bg-transparent text-[11px] font-mono text-white outline-none placeholder:text-[#31353f]"
+                        />
                     </div>
                 </div>
 
@@ -293,15 +361,23 @@ export default function OrderAssigner() {
                         {state.hexSelectionMode && state.hexSelectionType === 'DELIVERY' ? 'SELECTING ON MAP...' : form.delivery_latitude ? 'VECTOR LOCKED' : 'LOCATE DELIVERY'}
                     </button>
 
-                    <div className="grid grid-cols-2 gap-2 opacity-80">
-                        <div className="bg-[#0a0e17] border border-[#1a1c23] rounded px-2.5 py-1.5">
-                            <p className="text-[9px] text-[#505868] uppercase mb-0.5">LAT</p>
-                            <p className="text-[10px] font-mono text-white">{form.delivery_latitude || '---'}</p>
-                        </div>
-                        <div className="bg-[#0a0e17] border border-[#1a1c23] rounded px-2.5 py-1.5">
-                            <p className="text-[9px] text-[#505868] uppercase mb-0.5">LNG</p>
-                            <p className="text-[10px] font-mono text-white">{form.delivery_longitude || '---'}</p>
-                        </div>
+                    <div className="bg-[#0a0e17] border border-[#31353f] rounded px-3 py-2 opacity-90 focus-within:border-rose-500/50 transition-all">
+                        <p className="text-[8px] text-[#505868] uppercase mb-1 font-mono">Coordinates (LAT, LNG)</p>
+                        <input
+                            type="text"
+                            value={form.delivery_latitude && form.delivery_longitude ? `${form.delivery_latitude}, ${form.delivery_longitude}` : ''}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                const parts = val.split(',');
+                                setForm(f => ({
+                                    ...f,
+                                    delivery_latitude: parts[0]?.trim() || '',
+                                    delivery_longitude: parts[1]?.trim() || ''
+                                }));
+                            }}
+                            placeholder="28.xxxxxx, 77.xxxxxx"
+                            className="w-full bg-transparent text-[11px] font-mono text-white outline-none placeholder:text-[#31353f]"
+                        />
                     </div>
                 </div>
 
@@ -326,11 +402,11 @@ export default function OrderAssigner() {
                         ) : success ? (
                             <><Check className="w-4 h-4" /> Vector Saved</>
                         ) : (
-                            <><Save className="w-4 h-4" /> Save Mission Vector</>
+                            <><Save className="w-4 h-4" /> Save Order Vector</>
                         )}
                     </button>
                     <button
-                        onClick={() => { setView('tracker'); setForm(emptyForm); }}
+                        onClick={() => { setView('tracker'); setForm(emptyForm); dispatch({ type: 'CLEAR_SELECTION_PINS' }); }}
                         className="w-full mt-2 py-1.5 text-[10px] font-mono text-[#505868] hover:text-white transition-colors"
                     >
                         CANCEL
@@ -340,13 +416,19 @@ export default function OrderAssigner() {
         </div>
     );
 
+    const renderContent = () => {
+        if (view === 'create') return renderCreate();
+        if (view === 'track') return renderTrackOrder();
+        return renderTracker();
+    };
+
     return (
         <div className="h-full flex flex-col p-4 bg-[#0a0e17] border-l border-[#31353f] border-t overflow-hidden">
             <div className="flex items-center justify-between mb-4 shrink-0 px-1">
                 <div className="flex items-center gap-2">
                     <div className="w-2 h-4 bg-indigo-500 rounded-full"></div>
                     <h2 className="text-sm font-bold text-white uppercase tracking-widest">
-                        {view === 'tracker' ? 'Mission Dispatch' : 'New Mission'}
+                        {view === 'tracker' ? 'Order Dispatch' : 'New Order'}
                     </h2>
                 </div>
                 {view === 'tracker' && (
@@ -360,7 +442,7 @@ export default function OrderAssigner() {
             </div>
 
             <div className="flex-1 overflow-hidden flex flex-col">
-                {view === 'tracker' ? renderTracker() : renderCreate()}
+                {renderContent()}
             </div>
 
         </div>

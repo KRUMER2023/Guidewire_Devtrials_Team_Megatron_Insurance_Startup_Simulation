@@ -72,3 +72,5 @@ app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(rider.router, prefix="/api/v1/rider", tags=["Rider Profile"])
 app.include_router(orders.router)
+# app.include_router(navigation.router, prefix="/api/v1/navigation", tags=["Navigation"])
+

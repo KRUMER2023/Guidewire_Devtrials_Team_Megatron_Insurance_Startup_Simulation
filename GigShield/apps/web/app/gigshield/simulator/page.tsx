@@ -1,19 +1,21 @@
 "use client";
 
 import React from 'react';
-import { SimulationProvider } from '../../../context/SimulationContext';
+import { SimulationProvider, useSimulation } from '../../../context/SimulationContext';
 import PersonaSidebar from '../../../components/simulator/PersonaSidebar';
 import SpatialMapClient from '../../../components/simulator/SpatialMapClient';
 import EventTracker from '../../../components/simulator/EventTracker';
-import ServerLog from '../../../components/simulator/ServerLog';
 import { Shield } from 'lucide-react';
 import MapSearchBar from '../../../components/simulator/MapSearchBar';
 import HexSearchBar from '../../../components/simulator/HexSearchBar';
 import OrderAssigner from '../../../components/simulator/OrderAssigner';
+import ServerLog from '../../../components/simulator/ServerLog';
+import TrackingProgress from '../../../components/simulator/TrackingProgress';
 
 function GodModeControlRoom() {
+    const { state } = useSimulation();
     return (
-        <div className="h-screen w-screen bg-[#0a0e17] text-white overflow-hidden flex flex-col font-sans">
+        <div className="min-h-screen w-screen bg-[#0a0e17] text-white flex flex-col font-sans overflow-y-auto scroll-smooth custom-scrollbar">
 
             {/* Header (Navbar) */}
             <header className="h-14 border-b border-[#31353f] bg-[#111827] flex items-center justify-between px-6 shrink-0">
@@ -30,7 +32,7 @@ function GodModeControlRoom() {
             </header>
 
             {/* Main Simulation Grid */}
-            <main className="flex-1 grid grid-cols-[280px_1fr_320px] grid-rows-[minmax(0,1fr)_200px] gap-0 overflow-hidden">
+            <main className="flex-1 grid grid-cols-[280px_1fr_320px] grid-rows-[600px_auto] gap-0">
 
                 {/* Left Sidebar (spans both rows) */}
                 <div className="row-span-2 overflow-hidden">
@@ -64,9 +66,10 @@ function GodModeControlRoom() {
                     </div>
                 </div>
 
-                {/* Bottom Bar: fixed 200px row, hard-clipped */}
-                <div className="col-start-2 row-start-2 grid grid-cols-[1fr] border-t border-[#31353f] overflow-hidden h-[200px]">
-                    <div className="overflow-hidden h-full">
+                {/* Bottom Bar: dynamic layout based on tracking */}
+                <div className="col-start-2 row-start-2 flex flex-col border-t border-[#31353f] min-h-[300px]">
+                    <TrackingProgress />
+                    <div className="flex-1 overflow-hidden min-h-0">
                         <ServerLog />
                     </div>
                 </div>
