@@ -1,11 +1,14 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
+from redis.asyncio import Redis
 
 from database.connection import get_db
 from database.models import HazardEvent
 from api.schemas import HazardEventCreate, HazardEventResponse
+from core.redis import get_redis
 
 router = APIRouter()
 
@@ -57,6 +60,27 @@ async def create_hazard_event(
     return _serialize(new_event)
 
 
+@router.get(
+    "/check/{hex_index}",
+    summary="Blazing fast checking of hazard status in a hex zone",
+)
+async def check_hazard_status(
+    hex_index: str,
+    redis: Redis = Depends(get_redis),
+):
+    """
+    Checks Redis for any active hazard in the given H3 index.
+    Returns disrupted status and details if found.
+    """
+    hazard_data = await redis.get(f"hazard:{hex_index}")
+    if hazard_data:
+        return {
+            "is_disrupted": True,
+            "details": json.loads(hazard_data)
+        }
+    return {"is_disrupted": False}
+
+
 @router.patch(
     "/{event_id}/toggle",
     response_model=HazardEventResponse,
@@ -65,6 +89,7 @@ async def create_hazard_event(
 async def toggle_hazard_event(
     event_id: str,
     db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
 ) -> HazardEventResponse:
     import uuid as _uuid
     try:
@@ -80,6 +105,27 @@ async def toggle_hazard_event(
     event.is_active = not event.is_active
     await db.commit()
     await db.refresh(event)
+
+    # Redis Sync Logic
+    hex_list = event.hex_index.split(",") if event.hex_index else []
+    if event.is_active:
+        # Push to Redis
+        hazard_data = {
+            "id": str(event.id),
+            "name of Hazard": event.hazard_type,
+            "confidence score": float(event.confidence_score),
+            "severity": event.severity,
+            "Created at:": event.created_at.isoformat()
+        }
+        for hex_code in hex_list:
+            if hex_code.strip():
+                await redis.set(f"hazard:{hex_code.strip()}", json.dumps(hazard_data))
+    else:
+        # Remove from Redis
+        for hex_code in hex_list:
+            if hex_code.strip():
+                await redis.delete(f"hazard:{hex_code.strip()}")
+
     return _serialize(event)
 
 
@@ -91,6 +137,7 @@ async def toggle_hazard_event(
 async def delete_hazard_event(
     event_id: str,
     db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
 ):
     import uuid as _uuid
     try:
@@ -105,4 +152,11 @@ async def delete_hazard_event(
 
     await db.delete(event)
     await db.commit()
+
+    # Ensure cleanup from Redis on deletion
+    hex_list = event.hex_index.split(",") if event.hex_index else []
+    for hex_code in hex_list:
+        if hex_code.strip():
+            await redis.delete(f"hazard:{hex_code.strip()}")
+
     return None

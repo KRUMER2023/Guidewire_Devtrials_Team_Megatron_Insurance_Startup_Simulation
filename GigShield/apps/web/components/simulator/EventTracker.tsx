@@ -65,7 +65,12 @@ export default function EventTracker() {
             if (!res.ok) return;
             const updated: DbHazard = await res.json();
             dispatch({ type: 'TOGGLE_DB_HAZARD', payload: { id: updated.id, is_active: updated.is_active } });
-            dispatch({ type: 'ADD_LOG', payload: { level: 'info', message: `Hazard Matrix Updated: ${updated.hazard_type} is now ${updated.is_active ? 'ONLINE' : 'OFFLINE'}` } });
+
+            const logMessage = updated.is_active
+                ? `[Hazard_Warning] hex : ${updated.hex_index.join(", ")} are identified as current disruption zones`
+                : `[Hazard_Warning] hex : ${updated.hex_index.join(", ")} are identified as Normal zones`;
+
+            dispatch({ type: 'ADD_LOG', payload: { level: updated.is_active ? 'warn' : 'info', message: logMessage } });
         } catch { /* silent fail */ } finally {
             setTogglingId(null);
         }

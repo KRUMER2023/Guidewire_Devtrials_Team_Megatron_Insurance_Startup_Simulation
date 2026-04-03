@@ -53,6 +53,12 @@ export interface SimulationLog {
     timestamp: string;
 }
 
+export interface RiderLog {
+    id: string;
+    message: string;
+    timestamp: string;
+}
+
 export interface SimulationState {
     riders: Rider[];
     isLoadingRiders: boolean;
@@ -73,6 +79,8 @@ export interface SimulationState {
     deliveryPin: [number, number] | null;
     activeTracking: boolean;
     trackingIndex: number;
+    activeOrder: Order | null;
+    riderLogs: RiderLog[];
 }
 
 export const HARDCODED_PATH: [number, number][] = [
@@ -113,6 +121,8 @@ const initialState: SimulationState = {
     deliveryPin: null,
     activeTracking: false,
     trackingIndex: 0,
+    activeOrder: null,
+    riderLogs: [],
 };
 
 type Action =
@@ -127,9 +137,11 @@ type Action =
     | { type: 'TOGGLE_HAZARD_HEX'; payload: { cellId: string } } // New action for multi-select
     | { type: 'CLEAR_PENDING_HAZARDS' }
     | { type: 'CLEAR_SELECTION_PINS' }
-    | { type: 'START_TRACKING' }
+    | { type: 'START_TRACKING'; payload: { order: Order } }
     | { type: 'UPDATE_TRACK_INDEX'; payload: number }
     | { type: 'STOP_TRACKING' }
+    | { type: 'ADD_RIDER_LOG'; payload: string }
+    | { type: 'CLEAR_RIDER_LOGS' }
     | { type: 'ADD_RIDER'; payload: Rider }
     | { type: 'SET_RIDERS'; payload: Rider[] }
     | { type: 'HIGHLIGHT_HEX'; payload: { cellId: string } }
@@ -212,12 +224,49 @@ function simulationReducer(state: SimulationState, action: Action): SimulationSt
                 pendingLat: null,
                 pendingLng: null
             };
-        case 'START_TRACKING':
-            return { ...state, activeTracking: true, trackingIndex: 0 };
-        case 'UPDATE_TRACK_INDEX':
-            return { ...state, trackingIndex: action.payload };
+        case 'START_TRACKING': {
+            const firstPos = HARDCODED_PATH[0];
+            const firstMsg = `[ping] : (${firstPos[0].toFixed(6)}, ${firstPos[1].toFixed(6)}) || order_id : ${action.payload.order.ord_id.slice(0, 8)} || Status : Pending`;
+            return {
+                ...state,
+                activeTracking: true,
+                trackingIndex: 0,
+                activeOrder: action.payload.order,
+                riderLogs: [
+                    { id: `rlog-${Date.now()}-0`, message: firstMsg, timestamp: new Date().toISOString() }
+                ]
+            };
+        }
+        case 'UPDATE_TRACK_INDEX': {
+            const idx = action.payload;
+            const pos = HARDCODED_PATH[idx];
+            let status = "Pending";
+            if (idx === 15) status = "Delivered";
+            else if (idx >= 5) status = "Not Delivered";
+
+            const logMsg = `[ping] : (${pos[0].toFixed(6)}, ${pos[1].toFixed(6)}) || order_id : ${state.activeOrder?.ord_id.slice(0, 8)} || Status : ${status}`;
+
+            return {
+                ...state,
+                trackingIndex: idx,
+                riderLogs: [
+                    ...state.riderLogs,
+                    { id: `rlog-${Date.now()}-${idx}`, message: logMsg, timestamp: new Date().toISOString() }
+                ]
+            };
+        }
         case 'STOP_TRACKING':
-            return { ...state, activeTracking: false, trackingIndex: 0 };
+            return { ...state, activeTracking: false, trackingIndex: 0, activeOrder: null };
+        case 'ADD_RIDER_LOG':
+            return {
+                ...state,
+                riderLogs: [
+                    ...state.riderLogs,
+                    { id: `rlog-${Date.now()}`, message: action.payload, timestamp: new Date().toISOString() }
+                ]
+            };
+        case 'CLEAR_RIDER_LOGS':
+            return { ...state, riderLogs: [] };
         case 'TOGGLE_HAZARD_HEX': {
             const current = state.pendingHazardHexes;
             const updated = current.includes(action.payload.cellId)

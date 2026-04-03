@@ -38,7 +38,7 @@ export interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-    login: (email: string, password: string) => Promise<boolean>;
+    login: (email: string, password: string) => Promise<{ success: boolean; user?: User; error?: string }>;
     logout: () => void;
     refreshProfile: () => Promise<void>;
 }
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const login = async (email: string, password: string): Promise<boolean> => {
+    const login = async (email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> => {
         setState(prev => ({ ...prev, isLoading: true, error: null }));
         try {
             const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -134,24 +134,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         isLoading: false,
                         error: null
                     }));
-                    return true;
+                    return { success: true, user: profileData.user };
                 }
             } else {
                 const errData = await response.json();
+                const errorMessage = errData.detail || "Invalid credentials";
                 setState(prev => ({
                     ...prev,
                     isLoading: false,
-                    error: errData.detail || "Invalid credentials"
+                    error: errorMessage
                 }));
+                return { success: false, error: errorMessage };
             }
         } catch (err) {
+            const errorMessage = "Server connection failed";
             setState(prev => ({
                 ...prev,
                 isLoading: false,
-                error: "Server connection failed"
+                error: errorMessage
             }));
+            return { success: false, error: errorMessage };
         }
-        return false;
+        return { success: false, error: "Authentication failed" };
     };
 
     const logout = () => {

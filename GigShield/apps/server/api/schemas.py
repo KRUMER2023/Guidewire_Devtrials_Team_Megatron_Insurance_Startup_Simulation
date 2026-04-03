@@ -97,6 +97,11 @@ class LoginPayload(BaseModel):
     email: str
     password: str
 
+class RiderVerifyPayload(BaseModel):
+    email: EmailStr
+    phone: str
+    password: str
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"

@@ -130,12 +130,15 @@ CREATE TABLE IF NOT EXISTS orders (
 -- MOCK DATA (Riders, Users, and Rider Stats from mock_users.csv)
 -- ============================================================
 
--- Clear existing mock data to ensure a clean state upon rebuild
 DELETE FROM rider_stats;
 
 DELETE FROM riders;
 
 DELETE FROM users;
+
+DELETE FROM orders;
+
+DELETE FROM hazard_events;
 
 -- 1. Insert into users (Identity System)
 -- NOTE: hashed_password is set to plain text for now; in production, these should be bcrypt hashes.
@@ -325,3 +328,39 @@ VALUES (
         73.172739
     )
 ON CONFLICT (zomato_id) DO NOTHING;
+
+-- 4. Insert into hazard_events (Default Active Hazard)
+INSERT INTO
+    hazard_events (
+        hazard_type,
+        hex_index,
+        confidence_score,
+        severity,
+        is_active
+    )
+VALUES (
+        'WATERLOGGING',
+        '8a42ca8536d7fff',
+        100.00,
+        8,
+        TRUE
+    );
+
+-- 5. Insert into orders (Default Simulation Mission)
+INSERT INTO
+    orders (
+        order_name,
+        zom_id,
+        pickup_latitude,
+        pickup_longitude,
+        delivery_latitude,
+        delivery_longitude
+    )
+VALUES (
+        'URGENT: Pizza Delivery',
+        'ZOM-VAD-001',
+        22.312049,
+        73.162498,
+        22.306432,
+        73.163304
+    );

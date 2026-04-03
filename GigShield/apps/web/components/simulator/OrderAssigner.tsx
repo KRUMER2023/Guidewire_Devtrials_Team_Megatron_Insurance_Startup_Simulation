@@ -164,7 +164,7 @@ export default function OrderAssigner() {
         const rider = state.riders.find((r: any) => r.zomatoId === order.zom_id);
         const riderName = rider ? rider.name : 'Unknown Rider';
         dispatch({ type: 'ADD_LOG', payload: { level: 'info', message: `🚀 Order Active: "${order.order_name}" tracking started for ${riderName}.` } });
-        dispatch({ type: 'START_TRACKING' });
+        dispatch({ type: 'START_TRACKING', payload: { order } });
     };
 
     // Simulation Loop for active tracking
