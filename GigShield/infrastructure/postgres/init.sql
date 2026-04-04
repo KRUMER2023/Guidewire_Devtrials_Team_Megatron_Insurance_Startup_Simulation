@@ -77,17 +77,6 @@ CREATE TABLE IF NOT EXISTS activity_logs (
 
 CREATE INDEX IF NOT EXISTS idx_user_activity_timestamp ON activity_logs (user_id, timestamp);
 
--- -- ============================================================
--- -- POLICIES TABLE
--- -- ============================================================
--- CREATE TABLE IF NOT EXISTS policies (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
---     rider_id UUID NOT NULL REFERENCES riders (id) ON DELETE CASCADE,
---     status policystatus NOT NULL,
---     weekly_premium NUMERIC(6, 2) NOT NULL,
---     valid_until TIMESTAMP NOT NULL
--- );
-
 -- ============================================================
 -- PAYOUT LEDGER TABLE
 -- ============================================================
@@ -140,10 +129,12 @@ DELETE FROM orders;
 
 DELETE FROM hazard_events;
 
--- 1. Insert into users (Identity System)
--- NOTE: hashed_password is set to plain text for now; in production, these should be bcrypt hashes.
+-- ============================================================
+-- STEP 1: Insert into USERS with explicit UUIDs
+-- ============================================================
 INSERT INTO
     users (
+        id, -- ← Now explicitly setting the UUID
         name,
         phone,
         email,
@@ -154,6 +145,7 @@ INSERT INTO
         longitude
     )
 VALUES (
+        '550e8400-e29b-41d4-a716-446655440001'::uuid,
         'Raju Rastogi',
         '9876543210',
         'raju@gig.com',
@@ -164,6 +156,7 @@ VALUES (
         73.162498
     ),
     (
+        '550e8400-e29b-41d4-a716-446655440002'::uuid,
         'Sunita Sharma',
         '9876543211',
         'sunita@gig.com',
@@ -174,6 +167,7 @@ VALUES (
         73.163304
     ),
     (
+        '550e8400-e29b-41d4-a716-446655440003'::uuid,
         'Amit Patel',
         '9876543212',
         'amit@gig.com',
@@ -184,6 +178,7 @@ VALUES (
         73.170982
     ),
     (
+        '550e8400-e29b-41d4-a716-446655440004'::uuid,
         'Vikram Singh',
         '9876543213',
         'vikram@gig.com',
@@ -194,6 +189,7 @@ VALUES (
         73.175308
     ),
     (
+        '550e8400-e29b-41d4-a716-446655440005'::uuid,
         'Suresh Kumar',
         '9876543214',
         'suresh@gig.com',
@@ -204,6 +200,7 @@ VALUES (
         73.182506
     ),
     (
+        '550e8400-e29b-41d4-a716-446655440006'::uuid,
         'Deepa Kumari',
         '9876543215',
         'deepa@gig.com',
@@ -215,49 +212,12 @@ VALUES (
     )
 ON CONFLICT (email) DO NOTHING;
 
--- 2. Insert into rider_stats (Performance & Payout Matrix)
--- Linked to users via email lookup
-INSERT INTO
-    rider_stats (
-        user_id,
-        trust_score,
-        current_premium,
-        total_payouts
-    )
-SELECT id, 85, 60.0, 0.0
-FROM users
-WHERE
-    email = 'raju@gig.com'
-UNION ALL
-SELECT id, 98, 60.0, 0.0
-FROM users
-WHERE
-    email = 'sunita@gig.com'
-UNION ALL
-SELECT id, 62, 98.5, 0.0
-FROM users
-WHERE
-    email = 'amit@gig.com'
-UNION ALL
-SELECT id, 75, 82.0, 400.0
-FROM users
-WHERE
-    email = 'vikram@gig.com'
-UNION ALL
-SELECT id, 45, 115.0, 0.0
-FROM users
-WHERE
-    email = 'suresh@gig.com'
-UNION ALL
-SELECT id, 92, 68.0, 800.0
-FROM users
-WHERE
-    email = 'deepa@gig.com'
-ON CONFLICT (user_id) DO NOTHING;
-
--- 3. Insert into riders (Simulation Model)
+-- ============================================================
+-- STEP 2: Insert into RIDERS using the SAME UUIDs
+-- ============================================================
 INSERT INTO
     riders (
+        id, -- ← Using the same UUID as users table
         name,
         age,
         zomato_id,
@@ -268,6 +228,7 @@ INSERT INTO
         longitude
     )
 VALUES (
+        '550e8400-e29b-41d4-a716-446655440001'::uuid,
         'Raju Rastogi',
         24,
         'ZOM-VAD-001',
@@ -278,6 +239,7 @@ VALUES (
         73.162498
     ),
     (
+        '550e8400-e29b-41d4-a716-446655440002'::uuid,
         'Sunita Sharma',
         29,
         'ZOM-VAD-002',
@@ -288,6 +250,7 @@ VALUES (
         73.163304
     ),
     (
+        '550e8400-e29b-41d4-a716-446655440003'::uuid,
         'Amit Patel',
         31,
         'ZOM-VAD-003',
@@ -298,6 +261,7 @@ VALUES (
         73.170982
     ),
     (
+        '550e8400-e29b-41d4-a716-446655440004'::uuid,
         'Vikram Singh',
         35,
         'ZOM-VAD-004',
@@ -308,6 +272,7 @@ VALUES (
         73.175308
     ),
     (
+        '550e8400-e29b-41d4-a716-446655440005'::uuid,
         'Suresh Kumar',
         27,
         'ZOM-VAD-005',
@@ -318,6 +283,7 @@ VALUES (
         73.182506
     ),
     (
+        '550e8400-e29b-41d4-a716-446655440006'::uuid,
         'Deepa Kumari',
         26,
         'ZOM-VAD-006',
@@ -329,7 +295,57 @@ VALUES (
     )
 ON CONFLICT (zomato_id) DO NOTHING;
 
--- 4. Insert into hazard_events (Default Active Hazard)
+-- ============================================================
+-- STEP 3: Insert into RIDER_STATS (using the same UUIDs)
+-- ============================================================
+INSERT INTO
+    rider_stats (
+        user_id,
+        trust_score,
+        current_premium,
+        total_payouts
+    )
+VALUES (
+        '550e8400-e29b-41d4-a716-446655440001'::uuid,
+        85,
+        60.0,
+        0.0
+    ),
+    (
+        '550e8400-e29b-41d4-a716-446655440002'::uuid,
+        98,
+        60.0,
+        0.0
+    ),
+    (
+        '550e8400-e29b-41d4-a716-446655440003'::uuid,
+        62,
+        98.5,
+        0.0
+    ),
+    (
+        '550e8400-e29b-41d4-a716-446655440004'::uuid,
+        75,
+        82.0,
+        400.0
+    ),
+    (
+        '550e8400-e29b-41d4-a716-446655440005'::uuid,
+        45,
+        115.0,
+        0.0
+    ),
+    (
+        '550e8400-e29b-41d4-a716-446655440006'::uuid,
+        92,
+        68.0,
+        800.0
+    )
+ON CONFLICT (user_id) DO NOTHING;
+
+-- ============================================================
+-- STEP 4: Insert into HAZARD_EVENTS (Default Active Hazard)
+-- ============================================================
 INSERT INTO
     hazard_events (
         hazard_type,
@@ -346,7 +362,9 @@ VALUES (
         TRUE
     );
 
--- 5. Insert into orders (Default Simulation Mission)
+-- ============================================================
+-- STEP 5: Insert into ORDERS (Default Simulation Mission)
+-- ============================================================
 INSERT INTO
     orders (
         order_name,

@@ -62,8 +62,10 @@ async def health_check(db: AsyncSession = Depends(get_db)):
     }
 
 @app.post("/tools/h3-resolve")
-def resolve_h3():
-    return {"h3_index": "8828308281fffff"}
+def resolve_h3(lat: float, lng: float):
+    import h3
+    h3_index = h3.latlng_to_cell(lat, lng, 10)
+    return {"h3_index": h3_index}
 
 app.include_router(telemetry.router)
 app.include_router(riders.router, prefix="/api/v1/riders", tags=["Riders"])

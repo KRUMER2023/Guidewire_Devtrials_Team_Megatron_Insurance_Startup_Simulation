@@ -15,8 +15,7 @@ import TrackingProgress from '../../../components/simulator/TrackingProgress';
 function GodModeControlRoom() {
     const { state } = useSimulation();
     return (
-        <div className="min-h-screen w-screen bg-[#0a0e17] text-white flex flex-col font-sans overflow-y-auto scroll-smooth custom-scrollbar">
-
+        <div className="h-screen w-screen bg-[#0a0e17] text-white flex flex-col font-sans overflow-hidden">
             {/* Header (Navbar) */}
             <header className="h-14 border-b border-[#31353f] bg-[#111827] flex items-center justify-between px-6 shrink-0">
                 <div className="flex items-center space-x-3">
@@ -32,10 +31,10 @@ function GodModeControlRoom() {
             </header>
 
             {/* Main Simulation Grid */}
-            <main className="flex-1 grid grid-cols-[280px_1fr_320px] grid-rows-[600px_auto] gap-0">
+            <main className="flex-1 grid grid-cols-[280px_1fr_320px] grid-rows-[400px_1fr] gap-0 overflow-hidden">
 
                 {/* Left Sidebar (spans both rows) */}
-                <div className="row-span-2 overflow-hidden">
+                <div className="row-span-2 overflow-hidden border-r border-[#31353f]">
                     <PersonaSidebar />
                 </div>
 
@@ -57,7 +56,7 @@ function GodModeControlRoom() {
                 </div>
 
                 {/* Right Sidebar (spans both rows) */}
-                <div className="row-span-2 flex flex-col overflow-hidden bg-[#0a0e17] border-l border-[#31353f]">
+                <div className="row-span-2 flex flex-col overflow-hidden bg-[#0a0e17]">
                     <div className="h-1/2 overflow-hidden">
                         <OrderAssigner />
                     </div>
@@ -67,9 +66,9 @@ function GodModeControlRoom() {
                 </div>
 
                 {/* Bottom Bar: dynamic layout based on tracking */}
-                <div className="col-start-2 row-start-2 flex flex-col border-t border-[#31353f] min-h-[300px]">
+                <div className="col-start-2 row-start-2 flex flex-col border-t border-[#31353f] overflow-hidden">
                     <TrackingProgress />
-                    <div className="flex-1 overflow-hidden min-h-0">
+                    <div className="flex-1 overflow-hidden">
                         <ServerLog />
                     </div>
                 </div>

@@ -71,7 +71,7 @@ export default function ServerLog() {
                                     <span className="text-[#10b981] whitespace-nowrap shrink-0">
                                         [{mounted ? new Date(log.timestamp).toLocaleTimeString() : '...'}]
                                     </span>
-                                    <span className="text-gray-300 break-all">
+                                    <span className="text-gray-300 break-all whitespace-pre-line">
                                         {log.message}
                                     </span>
                                 </div>

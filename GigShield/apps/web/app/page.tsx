@@ -54,7 +54,7 @@ export default function Home() {
                             <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-pink-400 group-hover:translate-x-1 transition-all" />
                         </Link>
 
-                        <Link href="/gigshield/master-dashboard" className="group relative flex items-center justify-between p-4 bg-zinc-900/40 hover:bg-zinc-800/60 backdrop-blur-xl border border-zinc-800/50 hover:border-pink-500/30 rounded-2xl transition-all duration-300 shadow-xl hover:shadow-pink-500/5 active:scale-[0.98]">
+                        {/* <Link href="/gigshield/master-dashboard" className="group relative flex items-center justify-between p-4 bg-zinc-900/40 hover:bg-zinc-800/60 backdrop-blur-xl border border-zinc-800/50 hover:border-pink-500/30 rounded-2xl transition-all duration-300 shadow-xl hover:shadow-pink-500/5 active:scale-[0.98]">
                             <div className="flex items-center gap-4">
                                 <div className="bg-pink-500/10 p-3 rounded-xl group-hover:bg-pink-500/20 text-pink-400 transition-colors">
                                     <LayoutDashboard className="w-5 h-5" />
@@ -66,7 +66,7 @@ export default function Home() {
                                 </div>
                             </div>
                             <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-pink-400 group-hover:translate-x-1 transition-all" />
-                        </Link>
+                        </Link> */}
                     </div>
 
                     {/* Right Column: Infrastructure Services */}

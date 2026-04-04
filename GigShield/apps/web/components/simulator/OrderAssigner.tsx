@@ -167,39 +167,101 @@ export default function OrderAssigner() {
         dispatch({ type: 'START_TRACKING', payload: { order } });
     };
 
+    const handlePayoutSequence = async (rider: any, hazard: any) => {
+        const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+        const riderName = rider?.name || "Rider";
+        const hazardName = hazard?.hazard_type || "Waterlogging";
+        const severity = hazard?.severity || 8;
+
+        // Payout Calculation: Base Rs 50 adjusted by trustScore (fallback to 85) + Rs 10 fixed
+        const tScore = rider?.trustScore || 85;
+        const payment = Math.round(70 * (tScore / 100) + 10);
+
+        await sleep(2000);
+        dispatch({ type: 'ADD_RIDER_LOG', payload: `[Payout Verified] : Verified the user : ${riderName} lost delivery due to disruption : ${hazardName}` });
+
+        await sleep(2000);
+        dispatch({ type: 'ADD_RIDER_LOG', payload: `[Payment Dispatch ] : payment out for  user : ${riderName}` });
+
+        await sleep(2000);
+        dispatch({ type: 'ADD_RIDER_LOG', payload: `[Payment Processed ] : payment processing done` });
+
+        await sleep(2000);
+        dispatch({ type: 'ADD_RIDER_LOG', payload: `[Payment Successful] : Payout Done\n[Amount] : Rs ${payment}\n[Hazard Name] : ${hazardName}\n[Severiy] : ${severity}\n[Logged to User Valt]` });
+
+        try {
+            await fetch(`${API_BASE}/api/v1/riders/${rider.id}/payout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: payment, hazard_type: hazardName })
+            });
+        } catch (err) {
+            console.error("Payout update failed:", err);
+        }
+    };
+
     // Simulation Loop for active tracking
     useEffect(() => {
         if (!state.activeTracking) return;
 
-        const interval = setInterval(() => {
-            // Check for pickup pause (Index 5 is pickup)
-            if (state.trackingIndex === 5) {
-                // To avoid multiple interval fires while pausing, we don't increment here.
-                // Instead, we just wait for the timeout below to push it to index 6.
-                return;
-            }
+        let pickupTimeout: NodeJS.Timeout | null = null;
+
+        const interval = setInterval(async () => {
+            if (state.trackingIndex === 5) return;
 
             if (state.trackingIndex < HARDCODED_PATH.length - 1) {
                 const nextIndex = state.trackingIndex + 1;
                 dispatch({ type: 'UPDATE_TRACK_INDEX', payload: nextIndex });
 
-                // If we just reached pickup, set a timeout to "resume" after 4s (as requested)
+                // BLAZING FAST DISRUPTION CHECK
+                const pos = HARDCODED_PATH[nextIndex];
+                const h3res = await fetch(`${API_BASE}/tools/h3-resolve?lat=${pos[0]}&lng=${pos[1]}`, { method: 'POST' });
+                const h3data = await h3res.json();
+                const h3Idx = h3data.h3_index;
+
+                try {
+                    const hres = await fetch(`${API_BASE}/api/v1/hazards/check/${h3Idx}`);
+                    const hdata = await hres.json();
+
+                    if (hdata.is_disrupted) {
+                        const rider = state.riders.find(r => r.zomatoId === state.activeOrder?.zom_id);
+                        const riderName = rider?.name || "Rider";
+
+                        dispatch({ type: 'ADD_DISRUPTION_HIT' });
+                        dispatch({
+                            type: 'ADD_RIDER_LOG',
+                            payload: `[Payout Dispatching] : Detected the user ${riderName} entered the disruption zone`
+                        });
+
+                        if (state.disruptionHits + 1 >= 2) {
+                            dispatch({ type: 'ADD_RIDER_LOG', payload: `[Status] : order cancel due to disruption` });
+                            clearInterval(interval);
+                            dispatch({ type: 'STOP_TRACKING' });
+                            await handlePayoutSequence(rider, hdata.details);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Hazard check failed", e);
+                }
+
                 if (nextIndex === 5) {
-                    // Stay at 5 for 4 seconds
-                    setTimeout(() => {
+                    pickupTimeout = setTimeout(() => {
                         dispatch({ type: 'UPDATE_TRACK_INDEX', payload: 6 });
                     }, 4000);
                 }
             } else {
-                // Delivery reached (Index 15)
                 dispatch({ type: 'ADD_LOG', payload: { level: 'info', message: `✅ Order Delivered! Process Complete.` } });
                 dispatch({ type: 'STOP_TRACKING' });
                 clearInterval(interval);
             }
-        }, 3000);
+        }, 3500);
 
-        return () => clearInterval(interval);
-    }, [state.activeTracking, state.trackingIndex, dispatch]);
+        return () => {
+            clearInterval(interval);
+            if (pickupTimeout) clearTimeout(pickupTimeout);
+        };
+    }, [state.activeTracking, state.trackingIndex, state.disruptionHits, state.riders, state.activeOrder, dispatch]);
 
 
 

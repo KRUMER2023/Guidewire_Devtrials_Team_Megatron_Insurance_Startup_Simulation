@@ -147,3 +147,8 @@ class OrderResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+ 
+ 
+class PayoutRequest(BaseModel):
+    amount: float
+    hazard_type: str

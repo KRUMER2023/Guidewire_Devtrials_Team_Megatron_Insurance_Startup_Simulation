@@ -5,7 +5,7 @@ import { useSimulation, HARDCODED_PATH } from '../../context/SimulationContext';
 import { MapPin, User, Package, CheckCircle } from 'lucide-react';
 
 export default function TrackingProgress() {
-    const { state } = useSimulation();
+    const { state, dispatch } = useSimulation();
 
     if (!state.activeTracking) return null;
 
@@ -38,7 +38,16 @@ export default function TrackingProgress() {
                     <div className="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></div>
                     <span className="text-[9px] font-mono font-bold text-indigo-400 uppercase tracking-widest">Live Order Tracking</span>
                 </div>
-                <span className="text-[9px] font-mono text-[#505868]">STEP: {currentStep + 1} / {totalSteps}</span>
+                <div className="flex items-center gap-3">
+                    <span className="text-[9px] font-mono text-[#505868]">STEP: {currentStep + 1} / {totalSteps}</span>
+                    <button
+                        onClick={() => dispatch({ type: 'STOP_TRACKING' })}
+                        className="text-[#505868] hover:text-rose-500 transition-colors font-mono text-[10px] font-bold border border-[#31353f] rounded px-1.5 hover:border-rose-500/30"
+                        title="Stop Simulation"
+                    >
+                        [X]
+                    </button>
+                </div>
             </div>
 
             <div className="relative h-1 bg-[#0a0e17] rounded-full overflow-hidden border border-[#31353f]">

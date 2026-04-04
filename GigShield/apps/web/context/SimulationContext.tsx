@@ -15,6 +15,7 @@ export interface Rider {
     location: [number, number]; // [lat, lng]
     status: 'ACTIVE' | 'IDLE' | 'DANGER' | 'SAFE';
     primaryH3Zone?: string | null;
+    averageDeliveries?: number;
 }
 
 export interface Order {
@@ -81,6 +82,7 @@ export interface SimulationState {
     trackingIndex: number;
     activeOrder: Order | null;
     riderLogs: RiderLog[];
+    disruptionHits: number;
 }
 
 export const HARDCODED_PATH: [number, number][] = [
@@ -123,6 +125,7 @@ const initialState: SimulationState = {
     trackingIndex: 0,
     activeOrder: null,
     riderLogs: [],
+    disruptionHits: 0,
 };
 
 type Action =
@@ -140,6 +143,7 @@ type Action =
     | { type: 'START_TRACKING'; payload: { order: Order } }
     | { type: 'UPDATE_TRACK_INDEX'; payload: number }
     | { type: 'STOP_TRACKING' }
+    | { type: 'ADD_DISRUPTION_HIT' }
     | { type: 'ADD_RIDER_LOG'; payload: string }
     | { type: 'CLEAR_RIDER_LOGS' }
     | { type: 'ADD_RIDER'; payload: Rider }
@@ -226,14 +230,14 @@ function simulationReducer(state: SimulationState, action: Action): SimulationSt
             };
         case 'START_TRACKING': {
             const firstPos = HARDCODED_PATH[0];
-            const firstMsg = `[ping] : (${firstPos[0].toFixed(6)}, ${firstPos[1].toFixed(6)}) || order_id : ${action.payload.order.ord_id.slice(0, 8)} || Status : Pending`;
+            const firstMsg = `[From] : ${action.payload.order.zom_id}\n[ping] : (${firstPos[0].toFixed(6)}, ${firstPos[1].toFixed(6)})\n[order_id] : ${action.payload.order.ord_id.slice(0, 8)}\n[Status] : Pending`;
             return {
                 ...state,
                 activeTracking: true,
                 trackingIndex: 0,
                 activeOrder: action.payload.order,
                 riderLogs: [
-                    { id: `rlog-${Date.now()}-0`, message: firstMsg, timestamp: new Date().toISOString() }
+                    { id: `rlog-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, message: firstMsg, timestamp: new Date().toISOString() }
                 ]
             };
         }
@@ -244,25 +248,27 @@ function simulationReducer(state: SimulationState, action: Action): SimulationSt
             if (idx === 15) status = "Delivered";
             else if (idx >= 5) status = "Not Delivered";
 
-            const logMsg = `[ping] : (${pos[0].toFixed(6)}, ${pos[1].toFixed(6)}) || order_id : ${state.activeOrder?.ord_id.slice(0, 8)} || Status : ${status}`;
+            const logMsg = `[From] : ${state.activeOrder?.zom_id}\n[ping] : (${pos[0].toFixed(6)}, ${pos[1].toFixed(6)})\n[order_id] : ${state.activeOrder?.ord_id.slice(0, 8)}\n[Status] : ${status}`;
 
             return {
                 ...state,
                 trackingIndex: idx,
                 riderLogs: [
                     ...state.riderLogs,
-                    { id: `rlog-${Date.now()}-${idx}`, message: logMsg, timestamp: new Date().toISOString() }
+                    { id: `rlog-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`, message: logMsg, timestamp: new Date().toISOString() }
                 ]
             };
         }
         case 'STOP_TRACKING':
-            return { ...state, activeTracking: false, trackingIndex: 0, activeOrder: null };
+            return { ...state, activeTracking: false, trackingIndex: 0, activeOrder: null, disruptionHits: 0 };
+        case 'ADD_DISRUPTION_HIT':
+            return { ...state, disruptionHits: state.disruptionHits + 1 };
         case 'ADD_RIDER_LOG':
             return {
                 ...state,
                 riderLogs: [
                     ...state.riderLogs,
-                    { id: `rlog-${Date.now()}`, message: action.payload, timestamp: new Date().toISOString() }
+                    { id: `rlog-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, message: action.payload, timestamp: new Date().toISOString() }
                 ]
             };
         case 'CLEAR_RIDER_LOGS':

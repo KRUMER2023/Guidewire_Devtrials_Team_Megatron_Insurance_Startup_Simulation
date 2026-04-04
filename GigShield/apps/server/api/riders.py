@@ -5,10 +5,71 @@ from sqlalchemy import select
 from typing import List
 
 from database.connection import get_db
-from database.models import Rider, VehicleType, User, RiderStats
-from api.schemas import RiderCreate, RiderResponse
+from database.models import Rider, VehicleType, User, RiderStats, ActivityLog
+from api.schemas import RiderCreate, RiderResponse, PayoutRequest
+import uuid as _uuid
 
 router = APIRouter()
+
+@router.post(
+    "/{rider_id}/payout",
+    status_code=status.HTTP_200_OK,
+    summary="Process a disruptive payout for a rider",
+)
+async def process_payout(
+    rider_id: str,
+    payload: PayoutRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        uid = _uuid.UUID(rider_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid rider UUID.")
+
+    # 1. Update RiderStats (Try to find it)
+    stats_res = await db.execute(select(RiderStats).where(RiderStats.user_id == uid))
+    stats = stats_res.scalar_one_or_none()
+    
+    if not stats:
+        # SELF-HEALING: If it's a simulation rider missing from the identity system, create a User & Stats record
+        rider_res = await db.execute(select(Rider).where(Rider.id == uid))
+        rider = rider_res.scalar_one_or_none()
+        
+        if not rider:
+             raise HTTPException(status_code=404, detail="Rider not found in simulation or identity system.")
+        
+        # Create a dummy User for this ID if missing
+        user_res = await db.execute(select(User).where(User.id == uid))
+        if not user_res.scalar_one_or_none():
+            new_user = User(
+                id=uid,
+                name=rider.name,
+                phone=f"SIM-{rider.zomato_id}",
+                email=f"{rider.zomato_id.lower()}@simulation.gigshield",
+                hashed_password="SIMULATED_USER",
+                vehicle_type=rider.vehicle_type.value if hasattr(rider.vehicle_type, 'value') else str(rider.vehicle_type)
+            )
+            db.add(new_user)
+            await db.flush()
+
+        # Create RiderStats
+        stats = RiderStats(user_id=uid, trust_score=rider.trust_score, total_payouts=0.0)
+        db.add(stats)
+        await db.flush()
+
+    stats.total_payouts += payload.amount
+
+    # 2. Add ActivityLog
+    new_log = ActivityLog(
+        user_id=uid,
+        event_type="PAYOUT_TRIGGERED",
+        amount=payload.amount,
+        h3_index=None
+    )
+    db.add(new_log)
+
+    await db.commit()
+    return {"status": "success", "new_total": stats.total_payouts}
 
 @router.get(
     "/",
@@ -46,7 +107,6 @@ async def create_rider(
         latitude=payload.latitude,
         longitude=payload.longitude
     )
-
     db.add(new_rider)
 
     try:

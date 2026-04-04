@@ -101,6 +101,7 @@ export default function PersonaSidebar() {
                         location,
                         status: 'ACTIVE' as const,
                         primaryH3Zone: r.primary_h3_zone ?? null,
+                        averageDeliveries: r.average_deliveries ?? 0,
                     };
                 });
 
@@ -412,6 +413,9 @@ export default function PersonaSidebar() {
                                                     ⬡ {rider.primaryH3Zone}
                                                 </span>
                                             )}
+                                            <span className="text-[10px] text-[#22c55e] font-mono block mt-0.5 font-bold">
+                                                📦 {rider.averageDeliveries ?? 0} Avg Deliveries
+                                            </span>
                                         </div>
                                         <div className="flex flex-col items-end gap-2">
                                             <span className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)] shrink-0 ${rider.status === 'ACTIVE' ? 'bg-green-500' : rider.status === 'DANGER' ? 'bg-red-500' : 'bg-gray-500'}`} />
