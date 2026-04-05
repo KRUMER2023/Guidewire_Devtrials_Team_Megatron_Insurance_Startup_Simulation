@@ -33,7 +33,7 @@ To demonstrate the platform, we built two distinct interfaces:
 *   **The Command Center (Simulator):** A comprehensive administrative dashboard used for testing and visualization. It features a central world map, mock rider telemetry, and a "God Panel" to manually trigger backend disaster simulations and automated payouts.
 
 <!-- ![Img1_Persona](Assests/Images/Img5_Interfaces.png) -->
-<img src="Assests/Images/Img5_Interfaces.png" width="50%">
+<img src="Assests/Images/Img5_Interfaces.PNG" width="50%">
 
 ---
 
