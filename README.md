@@ -1,5 +1,5 @@
-![Img1_Persona](Assests/Images/GigShield_Thumbnail.png)
-# GigShield: Algorithmic Income Resilience
+![Img1_Persona](Assests/Images/Sentinel_Thumbnail.png)
+# Sentinel: Algorithmic Income Resilience
 
 **Target Persona:** Full-Time Zomato Delivery Partner (Metro City Operations)
 
@@ -12,7 +12,7 @@
 >[![Watch Video](https://img.shields.io/badge/Watch-Project_Video-blue?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/14z7swQW1qNsChvvBOLM9CLgNS2LtsPWG/view?usp=sharing)
 
 
-<!-- [![Video Thumbnail](Images/GigShield_Thumbnail.png)](paste_your_google_drive_link_here) -->
+<!-- [![Video Thumbnail](Images/Sentinel_Thumbnail.png)](paste_your_google_drive_link_here) -->
 
 ---
 

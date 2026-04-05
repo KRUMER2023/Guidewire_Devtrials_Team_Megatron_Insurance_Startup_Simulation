@@ -1,6 +1,6 @@
-# 🚀 Welcome to the GigShield Monorepo!
+# 🚀 Welcome to the Sentinel Monorepo!
 
-Welcome to Team MEGATRON! You are about to deploy GigShield—our spatial parametric insurance platform powered by event-driven AI agents. This guide will get your local environment running the entire Dockerized stack in under 5 minutes. Let's build!
+Welcome to Team MEGATRON! You are about to deploy Sentinel—our spatial parametric insurance platform powered by event-driven AI agents. This guide will get your local environment running the entire Dockerized stack in under 5 minutes. Let's build!
 
 ## 🛠️ Prerequisites
 
@@ -13,7 +13,7 @@ Before you begin, ensure you have the following installed on your machine:
 
 ## 🔐 Step 1: The Secrets Override (CRITICAL)
 
-GigShield relies on strict secrets isolation to protect our API quotas. 
+Sentinel relies on strict secrets isolation to protect our API quotas. 
 
 1. Duplicate the template file:
    In the `GigShield` directory, copy `.env.example` to a new file named `.env`.
