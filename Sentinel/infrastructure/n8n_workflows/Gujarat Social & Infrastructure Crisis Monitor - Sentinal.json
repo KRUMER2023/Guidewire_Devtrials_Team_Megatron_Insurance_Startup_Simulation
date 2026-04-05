@@ -1,0 +1,600 @@
+{
+  "name": "Gujarat Social & Infrastructure Crisis Monitor — GigShield",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Social & Infrastructure Crisis Monitor\nGigShield Production v2\n\nRSS Sources (6):\n- Gujarat Samachar: Ahmedabad, Baroda, Surat, Gandhinagar, Rajkot\n- Google News Gujarat crisis filter\n\nSETUP: Add Gemini credential. Enable 15-min schedule.\n\nJSON PARSER: Resilient v2\n- Layer 1: Direct parse\n- Layer 2: Trailing comma + missing comma repair\n- Layer 3: Object-by-object extraction\n\nWEATHER: 100% EXCLUDED",
+        "height": 680,
+        "width": 265,
+        "color": 7
+      },
+      "id": "51f267a2-6b32-4600-a04d-39e7bfb5888f",
+      "name": "Sticky Note 6196471b",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2224,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "content": "RSS feeds -> Merge -> Parse/filter -> Gemini AI -> Resilient JSON Parser v2 (3-Layer) -> H3 Geospatial -> HTML Dashboard",
+        "height": 70,
+        "width": 1450,
+        "color": 2
+      },
+      "id": "0b162ed6-0c4a-41af-aaea-ed07e21164e7",
+      "name": "Sticky Note 6c61d2f1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "d8042d62-3c64-4587-8450-2a47bfe0935e",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -240,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.gujaratsamachar.com/rss/city/ahmedabad",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/rss+xml, application/xml, text/xml, */*"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 GigShield-CrisisBot/1.0"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "rawRss"
+            }
+          },
+          "timeout": 12000
+        }
+      },
+      "id": "b6096bf6-149b-4d03-b021-3cf210891d3a",
+      "name": "RSS — Gujarat Samachar Ahmedabad",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        112
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "numberInputs": 6
+      },
+      "id": "9fcc755c-f917-443d-ba2a-a8042351f54e",
+      "name": "Merge All RSS Feeds",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        384,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.gujaratsamachar.com/rss/city/baroda",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/rss+xml, application/xml, text/xml, */*"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 GigShield-CrisisBot/1.0"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "rawRss"
+            }
+          },
+          "timeout": 12000
+        }
+      },
+      "id": "cb6ede9b-1d5d-4217-86e6-941fbb04bf1c",
+      "name": "RSS — Gujarat Samachar Baroda",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        240
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "https://www.gujaratsamachar.com/rss/city/surat",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/rss+xml, application/xml, text/xml, */*"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 GigShield-CrisisBot/1.0"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "rawRss"
+            }
+          },
+          "timeout": 12000
+        }
+      },
+      "id": "3ad11fc5-1c0b-4738-86e6-121bef14720e",
+      "name": "RSS — Gujarat Samachar Surat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        352
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "https://www.gujaratsamachar.com/rss/city/gandhinagar",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/rss+xml, application/xml, text/xml, */*"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 GigShield-CrisisBot/1.0"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "rawRss"
+            }
+          },
+          "timeout": 12000
+        }
+      },
+      "id": "043f6366-294f-401a-bb94-887219b53846",
+      "name": "RSS — Gujarat Samachar Gandhinagar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        480
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "https://www.gujaratsamachar.com/rss/city/rajkot",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/rss+xml, application/xml, text/xml, */*"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 GigShield-CrisisBot/1.0"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "rawRss"
+            }
+          },
+          "timeout": 12000
+        }
+      },
+      "id": "7506c2bc-28f1-44c6-9c55-c0396faa28f1",
+      "name": "RSS — Gujarat Samachar Rajkot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        592
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=Gujarat+(strike+OR+bandh+OR+protest+OR+curfew+OR+blockade+OR+road+closed)-weather-rain-flood&hl=gu-IN&gl=IN&ceid=IN:gu",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/rss+xml, application/xml, text/xml, */*"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 GigShield-CrisisBot/1.0"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "rawRss"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "e6871ef6-f352-4cc6-8487-e97d2b9daa85",
+      "name": "RSS — Google News Gujarat Crisis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        784
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "\nvar items = $input.all();\nvar xt = function(xml, tag) {\n  var o = '<' + tag, c = '</' + tag + '>';\n  var s = xml.indexOf(o); if (s === -1) return '';\n  var cs = xml.indexOf('>', s) + 1; if (cs === 0) return '';\n  var e = xml.indexOf(c, cs); if (e === -1) return '';\n  var val = xml.substring(cs, e).trim();\n  if (val.indexOf('<![CDATA[') === 0) val = val.substring(9, val.lastIndexOf(']]>')).trim();\n  return val;\n};\nvar xat = function(xml, tag) {\n  var res = [], o = '<' + tag, c = '</' + tag + '>', pos = 0;\n  while (pos < xml.length) {\n    var s = xml.indexOf(o, pos); if (s === -1) break;\n    var cs = xml.indexOf('>', s) + 1; if (cs === 0) break;\n    var e = xml.indexOf(c, cs); if (e === -1) break;\n    res.push(xml.substring(cs, e).trim());\n    pos = e + c.length;\n  }\n  return res;\n};\nvar inferSource = function(raw) {\n  if (!raw) return 'Unknown';\n  var rl = raw.toLowerCase();\n  if (rl.indexOf('gujaratsamachar') !== -1) {\n    if (rl.indexOf('/ahmedabad') !== -1) return 'Gujarat Samachar — Ahmedabad';\n    if (rl.indexOf('/baroda') !== -1) return 'Gujarat Samachar — Baroda';\n    if (rl.indexOf('/surat') !== -1) return 'Gujarat Samachar — Surat';\n    if (rl.indexOf('/gandhinagar') !== -1) return 'Gujarat Samachar — Gandhinagar';\n    if (rl.indexOf('/rajkot') !== -1) return 'Gujarat Samachar — Rajkot';\n    return 'Gujarat Samachar';\n  }\n  if (rl.indexOf('news.google') !== -1) return 'Google News RSS';\n  return 'Gujarat News';\n};\nvar wxKw = ['rain','rainfall','flood','cyclone','heatwave','heat wave','temperature','monsoon','drought','earthquake','storm','lightning','weather','humidity','imd','meteorological','tidal','tsunami','cloudy','overcast','precipitation','celsius','thunderstorm'];\nvar isWeather = function(text) {\n  var tl = (text || '').toLowerCase();\n  for (var w = 0; w < wxKw.length; w++) { if (tl.indexOf(wxKw[w]) !== -1) return true; }\n  return false;\n};\nvar allArticles = [];\nvar stats = { totalRaw: 0, weatherOut: 0, kept: 0, feedErrors: 0 };\nfor (var i = 0; i < items.length; i++) {\n  var d = items[i].json;\n  var raw = d.rawRss || d.data || d.body || '';\n  if (typeof raw !== 'string') { stats.feedErrors++; continue; }\n  var rawL = raw.toLowerCase();\n  var isXml = rawL.indexOf('<rss') !== -1 || rawL.indexOf('<feed') !== -1 || rawL.indexOf('<?xml') !== -1 || rawL.indexOf('<channel') !== -1;\n  if (!isXml || raw.length < 100) { stats.feedErrors++; continue; }\n  var src = inferSource(raw);\n  var rssItems = xat(raw, 'item');\n  if (rssItems.length === 0) rssItems = xat(raw, 'entry');\n  for (var j = 0; j < rssItems.length && j < 30; j++) {\n    stats.totalRaw++;\n    var it = rssItems[j];\n    var title = xt(it, 'title') || '';\n    var desc  = xt(it, 'description') || xt(it, 'summary') || xt(it, 'content') || '';\n    var link  = xt(it, 'link') || xt(it, 'guid') || '';\n    var pd    = xt(it, 'pubDate') || xt(it, 'published') || new Date().toISOString();\n    var combined = title + ' ' + desc;\n    if (isWeather(combined)) { stats.weatherOut++; continue; }\n    stats.kept++;\n    allArticles.push({ title: title.substring(0, 300), description: desc.substring(0, 500), link: link, pubDate: pd, source: src });\n  }\n}\nif (allArticles.length === 0) {\n  allArticles.push({ title: 'No social crisis news in current feeds', description: 'RSS feeds returned no qualifying social or infrastructure crisis articles. No active disruptions detected or feeds offline.', link: '', pubDate: new Date().toISOString(), source: 'System' });\n}\nreturn [{ json: { articles: allArticles, stats: stats, fetchedAt: new Date().toISOString(), articleCount: allArticles.length } }];\n"
+      },
+      "id": "925b1c48-425f-4287-9dc5-0bef8879db54",
+      "name": "Parse & Pre-filter RSS Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are GigShield Social Crisis Analyst for Gujarat, India. Extract ONLY social & infrastructure disruptions.\n\nFetched: {{ $json.fetchedAt }} | Articles: {{ $json.articleCount }} | Weather-filtered: {{ $json.stats.weatherOut }}\n\n## NEWS ARTICLES:\n{{ $json.articles.map(function(a,i){return (i+1)+\". [\"+a.source+\"] \"+a.title+\" | \"+a.description}).join(\"\\n\") }}\n\n## ABSOLUTE EXCLUSIONS (reject completely):\nRain, flood, cyclone, heatwave, drought, earthquake, storm, weather, IMD, meteorological, temperature, monsoon. Also: sports, elections, business earnings, entertainment, events outside Gujarat.\n\n## EXTRACT ONLY:\nBandh / Hartal / Strike | Rasta Roko / Chakka Jam | Dharna / Andolan / Protest | Curfew / Section 144 / Police Action | Traffic Jam / Road Block / Bridge Closure / Metro Disruption\n\n## ZONE RULES:\nRED: City-wide bandh OR complete curfew OR total road blockade\nYELLOW: Localized protest OR heavy traffic OR partial road closure\nBLUE: Minor/isolated incident with minimal delivery impact\n\n## OUTPUT FORMAT RULES:\nIMPORTANT: Output ONLY raw JSON. Do NOT wrap in markdown code blocks. Do NOT add any text before or after the JSON.\nIMPORTANT: Use simple ASCII characters only in crisisSummary. No special quotes or unicode dashes.\nIMPORTANT: Ensure every string value uses double quotes and all special characters inside strings are properly escaped.\n\n{\"events\":[{\"city\":\"Ahmedabad\",\"locality\":\"Navrangpura\",\"eventCategory\":\"Bandh\",\"alertZone\":\"RED\",\"alertEmoji\":\"\\ud83d\\udd34\",\"crisisSummary\":\"City-wide trade bandh affecting all delivery routes.\",\"newsSource\":\"Gujarat Samachar\",\"latitude\":23.0225,\"longitude\":72.5714}]}\n\nRules:\n- No qualifying events: ONE entry with city=Gujarat, locality=State Wide, alertZone=BLUE, eventCategory=No Active Disruptions\n- locality must be specific area or road, not just city name\n- crisisSummary in English, max 120 chars, no special unicode chars\n- alertEmoji: use \\ud83d\\udd34 for RED, \\ud83d\\udfe1 for YELLOW, \\ud83d\\udfe2 for BLUE\n",
+        "batching": {}
+      },
+      "id": "965f1963-1e10-4220-8c29-f6a54469dbfc",
+      "name": "Gemini — Extract & Categorize Crises",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        864,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.1
+        }
+      },
+      "id": "9c519709-583b-4310-9a34-41e6e1b9346c",
+      "name": "Gemini Flash 2.5",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        864,
+        608
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "wBBQyX6AkltCjZia",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// ========================================================================\n// RESILIENT GEMINI JSON PARSER v2 — GigShield\n// Three-layer parsing: Direct → Repair → Object-by-Object Recovery\n// ========================================================================\nvar items = $input.all();\nvar out = [];\n\nfor (var i = 0; i < items.length; i++) {\n  var text = items[i].json.text || items[i].json.response || '';\n\n  // If it is already a parsed object with events, pass through\n  if (!text && items[i].json.events) {\n    var evts = items[i].json.events;\n    for (var z = 0; z < evts.length; z++) out.push({ json: evts[z] });\n    continue;\n  }\n  if (!text && items[i].json.city) {\n    out.push({ json: items[i].json });\n    continue;\n  }\n\n  // ---- STEP 1: Strip markdown code fences using indexOf (no regex) ----\n  var jsonStr = text;\n  var fenceMarker = String.fromCharCode(96, 96, 96); // three backticks\n  var fenceStart = text.indexOf(fenceMarker);\n  if (fenceStart !== -1) {\n    var afterFence = text.indexOf(String.fromCharCode(10), fenceStart);\n    if (afterFence === -1) afterFence = fenceStart + 3;\n    var fenceEnd = text.indexOf(fenceMarker, afterFence + 1);\n    if (fenceEnd !== -1) {\n      jsonStr = text.substring(afterFence + 1, fenceEnd).trim();\n    }\n  }\n\n  // ---- STEP 2: Extract from first { to last } ----\n  var firstBrace = jsonStr.indexOf('{');\n  var lastBrace = jsonStr.lastIndexOf('}');\n  if (firstBrace !== -1 && lastBrace > firstBrace) {\n    jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);\n  }\n\n  if (!jsonStr || jsonStr.length < 5) {\n    out.push({ json: { city: 'Gujarat', locality: 'System', eventCategory: 'Empty Response', alertZone: 'BLUE', alertEmoji: '🔵', crisisSummary: 'LLM returned empty or non-JSON response.', newsSource: 'System Monitor', latitude: 22.2587, longitude: 71.1924 } });\n    continue;\n  }\n\n  // ---- STEP 3: Repair common JSON malformations ----\n  var repaired = jsonStr;\n  // Fix trailing commas: ,] or ,}\n  repaired = repaired.replace(/,\\s*\\]/g, ']');\n  repaired = repaired.replace(/,\\s*\\}/g, '}');\n  // Fix missing commas between objects: }{ or } {\n  repaired = repaired.replace(/\\}\\s*\\{/g, '},{');\n  // Fix missing commas between } and \" (end of object, start of next key)\n  repaired = repaired.replace(/\\}\\s*\"/g, '},\"');\n  // Strip control characters (keep printable + newline/tab/cr)\n  repaired = repaired.replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/g, '');\n\n  // ---- LAYER 1: Direct parse ----\n  var parsed = null;\n  try {\n    parsed = JSON.parse(repaired);\n  } catch (e1) {\n    // ---- LAYER 2: Try even more aggressive repair ----\n    try {\n      // Sometimes LLMs output unescaped newlines inside strings\n      // Replace actual newlines inside strings with spaces\n      var aggressive = repaired.replace(/([^\\\\])\\\\n/g, '$1 ');\n      parsed = JSON.parse(aggressive);\n    } catch (e2) {\n      parsed = null;\n    }\n  }\n\n  if (parsed) {\n    if (parsed.events && Array.isArray(parsed.events)) {\n      for (var f = 0; f < parsed.events.length; f++) out.push({ json: parsed.events[f] });\n    } else if (Array.isArray(parsed)) {\n      for (var g = 0; g < parsed.length; g++) out.push({ json: parsed[g] });\n    } else if (parsed.city) {\n      out.push({ json: parsed });\n    } else {\n      // Wrap in case it parsed but has unusual structure\n      out.push({ json: parsed });\n    }\n    continue;\n  }\n\n  // ---- LAYER 3: Object-by-object recovery ----\n  // Extract individual {...} blocks at the event level and parse each separately\n  var recovered = [];\n  var depth = 0, objStart = -1;\n  for (var c = 0; c < repaired.length; c++) {\n    if (repaired[c] === '{') {\n      depth++;\n      if (depth === 2) objStart = c; // event objects are at depth 2 (inside {\"events\":[HERE]})\n    } else if (repaired[c] === '}') {\n      depth--;\n      if (depth === 1 && objStart !== -1) {\n        var block = repaired.substring(objStart, c + 1);\n        try {\n          var obj = JSON.parse(block);\n          if (obj.city || obj.locality || obj.eventCategory) {\n            recovered.push(obj);\n          }\n        } catch (blockErr) {\n          // Try fixing the individual block\n          var fixBlock = block.replace(/,\\s*\\}/g, '}');\n          try {\n            var obj2 = JSON.parse(fixBlock);\n            if (obj2.city || obj2.locality || obj2.eventCategory) {\n              recovered.push(obj2);\n            }\n          } catch (blockErr2) {\n            // skip this broken object\n          }\n        }\n        objStart = -1;\n      }\n    }\n  }\n\n  if (recovered.length > 0) {\n    for (var rv = 0; rv < recovered.length; rv++) {\n      out.push({ json: recovered[rv] });\n    }\n  } else {\n    // Absolute last resort: return error with raw response for debugging\n    out.push({\n      json: {\n        city: 'Gujarat',\n        locality: 'System',\n        eventCategory: 'Parser Error',\n        alertZone: 'BLUE',\n        alertEmoji: '🔵',\n        crisisSummary: 'JSON parse failed after all repair attempts.',\n        newsSource: 'System Monitor',\n        latitude: 22.2587,\n        longitude: 71.1924,\n        rawResponse: text.substring(0, 400)\n      }\n    });\n  }\n}\n\nreturn out.length > 0 ? out : [{ json: { city: 'Gujarat', locality: 'State Wide', alertZone: 'BLUE', alertEmoji: '🔵', eventCategory: 'No Active Disruptions', crisisSummary: 'No data.', newsSource: 'System Monitor', latitude: 22.2587, longitude: 71.1924 } }];\n"
+      },
+      "id": "1eb7a304-13aa-4c88-a15d-85ab89d98529",
+      "name": "Parse Gemini JSON (Resilient v2)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nvar h3approx = function(lat, lng, res) {\n  var f = res === 9 ? 0.001566 : 0.004191;\n  var sLat = Math.round(lat / f) * f, sLng = Math.round(lng / f) * f;\n  var lo = Math.round((sLat + 90) * 10000), no = Math.round((sLng + 180) * 10000);\n  var hx = function(n, p) { var h = Math.abs(Math.round(n)).toString(16); while (h.length < p) h = '0' + h; return h; };\n  return ('8' + hx(res, 2) + hx(lo, 6) + hx(no, 7) + 'fffffff').substring(0, 15);\n};\nvar db = {\n  'navrangpura':{lat:23.0395,lng:72.5577},'cg road':{lat:23.0316,lng:72.5571},'rakhial':{lat:23.0351,lng:72.6141},\n  'maninagar':{lat:22.9958,lng:72.5958},'narol':{lat:22.9452,lng:72.5919},'satellite':{lat:23.0167,lng:72.5150},\n  'sg highway':{lat:23.0525,lng:72.5071},'bopal':{lat:23.0271,lng:72.4688},'chandkheda':{lat:23.1078,lng:72.5866},\n  'gota':{lat:23.1222,lng:72.5573},'thaltej':{lat:23.0621,lng:72.5015},'vastrapur':{lat:23.0430,lng:72.5120},\n  'paldi':{lat:23.0097,lng:72.5647},'bapunagar':{lat:23.0564,lng:72.5975},'nikol':{lat:23.0437,lng:72.6453},\n  'adajan':{lat:21.1979,lng:72.8009},'ring road':{lat:21.2020,lng:72.8327},'udhna':{lat:21.1586,lng:72.8418},\n  'katargam':{lat:21.2229,lng:72.8284},'varachha':{lat:21.2113,lng:72.8671},'textile market':{lat:21.1780,lng:72.8271},\n  'alkapuri':{lat:22.3021,lng:73.1851},'sayajigunj':{lat:22.3161,lng:73.1867},'fatehgunj':{lat:22.3261,lng:73.1733},\n  'race course':{lat:22.3006,lng:73.1811},'akota':{lat:22.2961,lng:73.1682},'manjalpur':{lat:22.2597,lng:73.1935},\n  'kalawad road':{lat:22.3039,lng:70.8588},'gondal road':{lat:22.2812,lng:70.8022},'raiya road':{lat:22.3299,lng:70.8111},\n  'mavdi':{lat:22.2799,lng:70.8397},'150 feet ring road':{lat:22.2940,lng:70.7775},\n  'sector 21':{lat:23.2227,lng:72.6533},'sector 7':{lat:23.2090,lng:72.6412},'infocity':{lat:23.1700,lng:72.6400},\n  'ahmedabad':{lat:23.0225,lng:72.5714},'surat':{lat:21.1702,lng:72.8311},'rajkot':{lat:22.3039,lng:70.8022},\n  'vadodara':{lat:22.3072,lng:73.1812},'baroda':{lat:22.3072,lng:73.1812},'gandhinagar':{lat:23.2156,lng:72.6369},\n  'bhavnagar':{lat:21.7645,lng:72.1519},'jamnagar':{lat:22.4707,lng:70.0577},'anand':{lat:22.5645,lng:72.9289},\n  'nadiad':{lat:22.6916,lng:72.8634},'gujarat':{lat:22.2587,lng:71.1924}\n};\nvar findCoords = function(loc, city) {\n  var lk = (loc || '').toLowerCase().trim();\n  var ck = (city || '').toLowerCase().trim();\n  if (db[lk]) return { lat: db[lk].lat, lng: db[lk].lng, src: 'locality-db' };\n  var keys = Object.keys(db);\n  for (var i = 0; i < keys.length; i++) {\n    if (lk.indexOf(keys[i]) !== -1 || keys[i].indexOf(lk) !== -1) return { lat: db[keys[i]].lat, lng: db[keys[i]].lng, src: 'partial-match' };\n  }\n  if (db[ck]) return { lat: db[ck].lat, lng: db[ck].lng, src: 'city-db' };\n  return { lat: 22.2587, lng: 71.1924, src: 'gujarat-center' };\n};\nvar items = $input.all();\nvar out = [];\nfor (var i = 0; i < items.length; i++) {\n  var data = items[i].json;\n  var list = data.events && Array.isArray(data.events) ? data.events : (data.city ? [data] : []);\n  for (var j = 0; j < list.length; j++) {\n    var e = list[j];\n    var lat = parseFloat(e.latitude), lng = parseFloat(e.longitude), coordSrc = 'ai-generated';\n    if (!lat || !lng || isNaN(lat) || isNaN(lng)) { var f = findCoords(e.locality, e.city); lat = f.lat; lng = f.lng; coordSrc = f.src; }\n    out.push({ json: { city: e.city||'Gujarat', locality: e.locality||'City Center', eventCategory: e.eventCategory||'Unknown', alertZone: e.alertZone||'BLUE', alertEmoji: e.alertEmoji||'🔵', crisisSummary: e.crisisSummary||'No details', newsSource: e.newsSource||'Unknown', h3HexId: h3approx(lat, lng, 9), h3Resolution: 9, latitude: lat, longitude: lng, coordinateSource: coordSrc, lastUpdated: new Date().toISOString() } });\n  }\n}\nif (out.length === 0) out.push({ json: { city: 'Gujarat', locality: 'State Wide', eventCategory: 'No Active Disruptions', alertZone: 'BLUE', alertEmoji: '🔵', crisisSummary: 'No active social or infrastructure crises. Normal conditions for gig deliveries.', newsSource: 'System Monitor', h3HexId: h3approx(22.2587, 71.1924, 9), h3Resolution: 9, latitude: 22.2587, longitude: 71.1924, coordinateSource: 'gujarat-center', lastUpdated: new Date().toISOString() } });\nout.sort(function(a, b) { var o = {RED:0,YELLOW:1,BLUE:2}; var oa = o[a.json.alertZone]; if (oa===undefined) oa=2; var ob = o[b.json.alertZone]; if (ob===undefined) ob=2; return oa - ob; });\nreturn out;\n"
+      },
+      "id": "2a6879d9-41bf-48b6-b7c4-b2888ebc2ba3",
+      "name": "H3 Hexcode — Resolution 9",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nvar items = $input.all();\nvar r=0,y=0,b=0;\nfor(var i=0;i<items.length;i++){var z=items[i].json.alertZone; if(z==='RED')r++; else if(z==='YELLOW')y++; else b++;}\nvar ist=function(s){try{return new Date(s).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:true});}catch(e){return s||'';}};\nvar catColor=function(cat){\n  var c=(cat||'').toLowerCase();\n  if(c.indexOf('bandh')!==-1||c.indexOf('hartal')!==-1)return '#7c3aed';\n  if(c.indexOf('curfew')!==-1||c.indexOf('section 144')!==-1)return '#dc2626';\n  if(c.indexOf('rasta roko')!==-1||c.indexOf('chakka jam')!==-1)return '#ea580c';\n  if(c.indexOf('protest')!==-1||c.indexOf('dharna')!==-1||c.indexOf('andolan')!==-1)return '#d97706';\n  if(c.indexOf('strike')!==-1)return '#0891b2';\n  if(c.indexOf('traffic')!==-1||c.indexOf('road')!==-1||c.indexOf('bridge')!==-1||c.indexOf('metro')!==-1)return '#475569';\n  return '#374151';\n};\nvar rows='';\nfor(var j=0;j<items.length;j++){\n  var d=items[j].json,zone=d.alertZone||'BLUE';\n  var rc=zone==='RED'?'row-red':zone==='YELLOW'?'row-yellow':'row-blue';\n  var zbs=zone==='RED'?'background:#b71c1c;color:#fff;':zone==='YELLOW'?'background:#f57f17;color:#000;':'background:#1565c0;color:#fff;';\n  var cc=catColor(d.eventCategory);\n  rows+='<tr class=\"'+rc+'\"><td class=\"num\">'+(j+1)+'</td>';\n  rows+='<td><span class=\"src-tag\">'+(d.newsSource||'')+'</span></td>';\n  rows+='<td><span class=\"cat-badge\" style=\"background:'+cc+'\">'+(d.eventCategory||'')+'</span></td>';\n  rows+='<td><strong>'+(d.city||'')+'</strong><br><small style=\"color:#8b949e;font-size:.75rem\">'+(d.locality||'')+'</small></td>';\n  rows+='<td><span class=\"zone-badge\" style=\"'+zbs+'\">'+(d.alertEmoji||'')+' '+zone+'</span></td>';\n  rows+='<td><code class=\"hex\">'+(d.h3HexId||'')+'</code><small style=\"display:block;color:#8b949e;font-size:.68rem;margin-top:2px;\">Res.9 &middot; '+(d.coordinateSource||'')+'</small></td>';\n  rows+='<td class=\"summary\">'+(d.crisisSummary||'')+'</td>';\n  rows+='<td class=\"ts\">'+ist(d.lastUpdated)+'</td></tr>';\n}\nvar ga=ist(new Date().toISOString());\nvar css=':root{--rdb:#ff4444;--ylb:#ffaa00;--blb:#58a6ff;--bg:#0d1117;--s2:#161b22;--s3:#21262d;--br:#30363d;--tx:#e6edf3;--mu:#8b949e;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;padding:28px 20px;}.wrap{max-width:1550px;margin:0 auto;}.hdr{text-align:center;margin-bottom:28px;}.hdr h1{font-size:1.85rem;font-weight:700;background:linear-gradient(135deg,#a78bfa 20%,#fb923c 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}.hdr p{color:var(--mu);font-size:.84rem;line-height:1.7;}.src-row{display:flex;justify-content:center;gap:8px;margin-top:10px;flex-wrap:wrap;}.sb{background:var(--s2);border:1px solid var(--br);border-radius:20px;padding:4px 11px;font-size:.72rem;color:var(--mu);}.notice{background:#1c1c2e;border:1px solid #7c3aed55;border-radius:10px;padding:9px 18px;text-align:center;font-size:.77rem;color:#a78bfa;margin-bottom:20px;}.sum{display:flex;gap:12px;justify-content:center;margin-bottom:24px;flex-wrap:wrap;}.st{background:var(--s2);border:1px solid var(--br);border-radius:14px;padding:14px 26px;text-align:center;min-width:110px;}.st .n{font-size:2rem;font-weight:700;line-height:1;}.st .l{font-size:.68rem;color:var(--mu);margin-top:5px;text-transform:uppercase;letter-spacing:.08em;}.st.r{border-color:var(--rdb);}.st.r .n{color:var(--rdb);}.st.y{border-color:var(--ylb);}.st.y .n{color:var(--ylb);}.st.b{border-color:var(--blb);}.st.b .n{color:var(--blb);}.st.t .n{color:var(--blb);}.tw{border-radius:14px;border:1px solid var(--br);overflow:hidden;overflow-x:auto;}table{width:100%;border-collapse:collapse;background:var(--s2);font-size:.84rem;}thead{background:var(--s3);}th{padding:11px 13px;text-align:left;font-weight:600;color:var(--mu);text-transform:uppercase;font-size:.67rem;letter-spacing:.1em;border-bottom:1px solid var(--br);white-space:nowrap;}td{padding:11px 13px;border-bottom:1px solid var(--s3);vertical-align:top;}tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(167,139,250,.04);}.row-red td.num{border-left:3px solid var(--rdb);}.row-yellow td.num{border-left:3px solid var(--ylb);}.row-blue td.num{border-left:3px solid var(--blb);}td.num{color:var(--mu);font-size:.78rem;width:34px;}.src-tag{font-size:.7rem;background:var(--s3);border:1px solid var(--br);padding:3px 7px;border-radius:6px;color:var(--mu);white-space:nowrap;}.cat-badge{display:inline-block;padding:3px 9px;border-radius:12px;font-size:.71rem;font-weight:600;color:#fff;white-space:nowrap;}.zone-badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:.73rem;font-weight:600;white-space:nowrap;}.hex{font-family:\"JetBrains Mono\",monospace;font-size:.75rem;background:var(--bg);padding:3px 7px;border-radius:6px;color:#7ee787;border:1px solid var(--br);}.summary{max-width:270px;line-height:1.5;color:#c9d1d9;font-size:.8rem;}.ts{color:var(--mu);font-size:.72rem;white-space:nowrap;}.foot{text-align:center;margin-top:16px;color:var(--mu);font-size:.73rem;line-height:1.9;}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#a78bfa;margin-right:5px;animation:p 2s infinite;}@keyframes p{0%,100%{opacity:1}50%{opacity:.35}}';\nvar html='<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><title>Gujarat Social Crisis Monitor | GigShield</title><link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\"><style>'+css+'</style></head><body><div class=\"wrap\"><div class=\"hdr\"><h1>&#128680; Gujarat Social &amp; Infrastructure Crisis Monitor</h1><p><span class=\"dot\"></span>Live &middot; GigShield Platform &middot; Auto-refresh: 15 min &middot; '+ga+' IST</p><div class=\"src-row\"><span class=\"sb\">&#128240; GS Ahmedabad</span><span class=\"sb\">&#128240; GS Baroda</span><span class=\"sb\">&#128240; GS Surat</span><span class=\"sb\">&#128240; GS Gandhinagar</span><span class=\"sb\">&#128240; GS Rajkot</span><span class=\"sb\">&#128312; Google News Gujarat</span><span class=\"sb\">&#129302; Gemini Flash 2.5</span><span class=\"sb\">&#128208; H3 Res.9</span></div></div><div class=\"notice\">&#9934; WEATHER-FREE MONITOR &mdash; Tracks only: Bandh &bull; Strike &bull; Curfew &bull; Section 144 &bull; Protest &bull; Rasta Roko &bull; Dharna &bull; Road Blockade &bull; Metro Disruption. Weather news 100% excluded.</div><div class=\"sum\"><div class=\"st r\"><div class=\"n\">'+r+'</div><div class=\"l\">&#128308; High Alert</div></div><div class=\"st y\"><div class=\"n\">'+y+'</div><div class=\"l\">&#128993; Moderate</div></div><div class=\"st b\"><div class=\"n\">'+b+'</div><div class=\"l\">&#128309; Normal</div></div><div class=\"st t\"><div class=\"n\">'+items.length+'</div><div class=\"l\">Total Events</div></div></div><div class=\"tw\"><table><thead><tr><th>#</th><th>News Source</th><th>Event Type</th><th>City / Locality</th><th>Alert Zone</th><th>H3 Hex ID (Res.9)</th><th>Crisis Summary (English)</th><th>Updated (IST)</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class=\"foot\"><p>H3 Geospatial Index &middot; Resolution 9 &middot; ~174m edge &middot; 40+ Gujarat locality coords</p><p>GigShield Parametric Insurance &middot; Social &amp; Infrastructure Monitor &middot; Weather-Excluded &middot; Gemini AI</p></div></div></body></html>';\nreturn [{ json: { htmlDashboard: html, summary: { total: items.length, red: r, yellow: y, blue: b }, generatedAt: new Date().toISOString(), crisisData: items.map(function(it){ return it.json; }) } }];\n"
+      },
+      "id": "f4416f44-2525-4627-b3f2-edd1717ecedb",
+      "name": "Dashboard — Social Crisis HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1744,
+        448
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [
+        [
+          {
+            "node": "RSS — Gujarat Samachar Ahmedabad",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS — Gujarat Samachar Baroda",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS — Gujarat Samachar Surat",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS — Gujarat Samachar Gandhinagar",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS — Gujarat Samachar Rajkot",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS — Google News Gujarat Crisis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS — Gujarat Samachar Ahmedabad": {
+      "main": [
+        [
+          {
+            "node": "Merge All RSS Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All RSS Feeds": {
+      "main": [
+        [
+          {
+            "node": "Parse & Pre-filter RSS Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS — Gujarat Samachar Baroda": {
+      "main": [
+        [
+          {
+            "node": "Merge All RSS Feeds",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "RSS — Gujarat Samachar Surat": {
+      "main": [
+        [
+          {
+            "node": "Merge All RSS Feeds",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "RSS — Gujarat Samachar Gandhinagar": {
+      "main": [
+        [
+          {
+            "node": "Merge All RSS Feeds",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "RSS — Gujarat Samachar Rajkot": {
+      "main": [
+        [
+          {
+            "node": "Merge All RSS Feeds",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "RSS — Google News Gujarat Crisis": {
+      "main": [
+        [
+          {
+            "node": "Merge All RSS Feeds",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Parse & Pre-filter RSS Items": {
+      "main": [
+        [
+          {
+            "node": "Gemini — Extract & Categorize Crises",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini — Extract & Categorize Crises": {
+      "main": [
+        [
+          {
+            "node": "Parse Gemini JSON (Resilient v2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Flash 2.5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gemini — Extract & Categorize Crises",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Gemini JSON (Resilient v2)": {
+      "main": [
+        [
+          {
+            "node": "H3 Hexcode — Resolution 9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "H3 Hexcode — Resolution 9": {
+      "main": [
+        [
+          {
+            "node": "Dashboard — Social Crisis HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "46018de7-d516-4961-80e0-2549275d2367",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cfd563f09467ea24fb519e46657bb93c0f5ff01348ea6ff12eceb81e4d778ad2"
+  },
+  "id": "B2v9jVoAo2d03fnD",
+  "tags": []
+}

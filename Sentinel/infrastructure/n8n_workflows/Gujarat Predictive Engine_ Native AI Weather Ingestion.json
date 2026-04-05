@@ -1,0 +1,291 @@
+{
+  "name": "Gujarat Predictive Engine: Native AI Weather Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "6e1bb369-c86c-40a6-be25-c8a6eb83c327",
+      "name": "Extract PDF Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        16,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 3
+            }
+          ]
+        }
+      },
+      "id": "b91dcb2a-b799-4627-9eb2-0422e414aaf1",
+      "name": "Schedule Trigger1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://mausam.imd.gov.in/ahmedabad/mcdata/state.pdf",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "id": "81a59cd9-aaad-42f4-b8aa-dc2ba9fe9f45",
+      "name": "Fetch IMD PDF1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -192,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama3\",\n  \"prompt\": \"You are a meteorological data extraction AI. Analyze the following official weather bulletin text for the state of Gujarat. Extract weather warnings, alert levels (Red, Orange, Yellow, Green), and maximum temperatures for ANY city or district mentioned.\\n\\nIf a region is mentioned under a thunderstorm or heavy rain warning, assign the appropriate color and a rain_prob (0-100). If a temperature is mentioned for a city, include it. If not, output null.\\n\\nOutput ONLY a valid JSON array of objects with these exact keys: 'city', 'temp_max', 'rain_prob', 'warning_color', 'forecast_day'. Do not output markdown, explanations, or backticks. Just the raw JSON array.\\n\\nTEXT TO ANALYZE:\\n{{ $json.text }}\",\n  \"stream\": false,\n  \"format\": \"json\"\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "e63977e5-5431-4b98-b3af-c54c182359c6",
+      "name": "Ollama LLM (Extract JSON)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        144,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.text }}"
+            }
+          ]
+        },
+        "simplify": false,
+        "jsonOutput": "={\n\"Areas\":[\n  {\n    \"city\": \"Ahmedabad\",\n    \"temp_max\": 37,\n    \"rain_prob\": null,\n    \"warning_color\": null,\n    \"forecast_day\": \"DAY-1\"\n  },\n  {\n    \"city\": \"Banaskantha\",\n    \"temp_max\": null,\n    \"rain_prob\": 60,\n    \"warning_color\": \"Red\",\n    \"forecast_day\": \"DAY-1\"\n  },\n  {\n    \"city\": \"Sabarkantha\",\n    \"temp_max\": null,\n    \"rain_prob\": 60,\n    \"warning_color\": \"Red\",\n    \"forecast_day\": \"DAY-1\"\n  }\n]\n}",
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "You are a meteorological data extraction AI.\nAnalyze the following official weather bulletin text for the state of Gujarat.\nExtract weather warnings, alert levels (Red, Orange, Yellow, Green), and maximum temperatures for ANY city or district mentioned.\nIf a region is mentioned under a thunderstorm or heavy rain warning, assign the appropriate color and a rain_prob (0-100).\nIf a temperature is mentioned for a city, include it. If not, output null.\nImportant note : \n- Output ONLY a valid JSON in the form :\n{\n\"Areas\":[\n  {\n    \"city\": \"Ahmedabad\",\n    \"temp_max\": 37,\n    \"rain_prob\": null,\n    \"warning_color\": null,\n    \"forecast_day\": \"DAY-1\"\n  },\n  {\n    \"city\": \"Banaskantha\",\n    \"temp_max\": null,\n    \"rain_prob\": 60,\n    \"warning_color\": \"Red\",\n    \"forecast_day\": \"DAY-1\"\n  },\n  {\n    \"city\": \"Sabarkantha\",\n    \"temp_max\": null,\n    \"rain_prob\": 60,\n    \"warning_color\": \"Red\",\n    \"forecast_day\": \"DAY-1\"\n  }\n]\n}\n- Do not output markdown, explanations, or backticks."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        -160
+      ],
+      "id": "e07aa68e-34d1-498c-9bcf-a0d72ed874fb",
+      "name": "Message a model1",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "wBBQyX6AkltCjZia",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4c13c94e-c9af-41ad-a5e9-676eee589e3d",
+              "name": "Output",
+              "value": "={{ $json.candidates[0].content.parts[0].text.replaceAll(\"\\n\",\"\") }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        912,
+        0
+      ],
+      "id": "24c947ad-9900-4fb0-8c0a-b4943419b92e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2792bf9a-1220-45de-9781-5f78aba30832",
+              "name": "Areas",
+              "value": "={{ $json.Output.Areas }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "8a55e4df-4df5-46a3-8ae6-deadf3de0e95",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "qwen2.5:latest",
+          "mode": "list",
+          "cachedResultName": "qwen2.5:latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.text }}"
+            }
+          ]
+        },
+        "simplify": false,
+        "options": {
+          "system": "You are a meteorological data extraction AI.\nAnalyze the following official weather bulletin text for the state of Gujarat.\nExtract weather warnings, alert levels (Red, Orange, Yellow, Green), and maximum temperatures for ANY city or district mentioned.\nIf a region is mentioned under a thunderstorm or heavy rain warning, assign the appropriate color and a rain_prob (0-100).\nIf a temperature is mentioned for a city, include it. If not, output null.\nImportant note : \n- Output ONLY a valid JSON in the form :\n{\n\"Areas\":[\n  {\n    \"city\": \"Ahmedabad\",\n    \"temp_max\": 37,\n    \"rain_prob\": null,\n    \"warning_color\": null,\n    \"forecast_day\": \"DAY-1\"\n  },\n  {\n    \"city\": \"Banaskantha\",\n    \"temp_max\": null,\n    \"rain_prob\": 60,\n    \"warning_color\": \"Red\",\n    \"forecast_day\": \"DAY-1\"\n  },\n  {\n    \"city\": \"Sabarkantha\",\n    \"temp_max\": null,\n    \"rain_prob\": 60,\n    \"warning_color\": \"Red\",\n    \"forecast_day\": \"DAY-1\"\n  }\n]\n}\n- Do not output markdown, explanations, or backticks.",
+          "format": "json"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        336,
+        256
+      ],
+      "id": "24084967-64be-45c9-8f7a-e0ccf8a99c3c",
+      "name": "Message a model",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        1344,
+        16
+      ],
+      "id": "ab360a87-0613-49ba-bb18-e54c43e63a92",
+      "name": "Postgres PGVector Store"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract PDF Text": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Fetch IMD PDF1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch IMD PDF1": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4394c02b-f8ca-4972-a0f0-779cbb5677c9",
+  "meta": {
+    "instanceId": "cfd563f09467ea24fb519e46657bb93c0f5ff01348ea6ff12eceb81e4d778ad2"
+  },
+  "id": "02gf5OHJ4l56Ft3r",
+  "tags": []
+}
