@@ -16,10 +16,10 @@ Before you begin, ensure you have the following installed on your machine:
 Sentinel relies on strict secrets isolation to protect our API quotas. 
 
 1. Duplicate the template file:
-   In the `GigShield` directory, copy `.env.example` to a new file named `.env`.
+   In the `Sentinel` directory, copy `.env.example` to a new file named `.env` in the same infrastructure folder.
    
 2. Generate your API Keys:
-   Get your personal Google Gemini API key and insert it into your new `.env` file (`GEMINI_API_KEY=your_personal_key_here`). Do the same for `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`.
+   Get your personal Google Gemini API key and insert it into your new `.env` file (`GEMINI_API_KEY=your_personal_key_here`). Do the same for `NEXT_PUBLIC_MAPPLS_ACCESS_TOKEN`.
    
 3. ⚠️ **WARNING: NEVER COMMIT YOUR `.env` FILE.** It is already listed in `.gitignore`, but double-check before pushing any commits!
 
@@ -27,9 +27,9 @@ Sentinel relies on strict secrets isolation to protect our API quotas.
 
 ## 🚀 Step 2: Ignition
 
-It's time to bring the infrastructure online. Open your terminal in the `GigShield` directory (where `docker-compose.yml` lives) and run the following command to build and start all microservices:
+It's time to bring the infrastructure online. Open your terminal in the `Sentinel` directory (where `docker-compose.yml` lives) and run the following command to build and start all microservices:
 
-```bash
+```
 docker-compose up --build
 ```
 
@@ -63,4 +63,4 @@ If you encounter issues during setup, check these common fixes:
   You likely have a local Postgres instance running. You must kill the local Postgres service or disable it so Docker can bind to port 5432.
   
 - **Volume permission issues for n8n**: 
-  If n8n fails to start due to write access, ensure the `GigShield/infrastructure/n8n/local_files` directory has the correct permissions for Docker to write to it.
+  If n8n fails to start due to write access, ensure the `Sentinel/infrastructure/n8n/local_files` directory has the correct permissions for Docker to write to it.

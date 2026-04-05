@@ -1,8 +1,3 @@
 {
-  "/sentinel/simulator/page": "app/sentinel/simulator/page.js",
-  "/page": "app/page.js",
-  "/sentinel/rider/login/page": "app/sentinel/rider/login/page.js",
-  "/sentinel/rider/homepage/page": "app/sentinel/rider/homepage/page.js",
-  "/sentinel/rider/register/page": "app/sentinel/rider/register/page.js",
-  "/sentinel/rider/account/page": "app/sentinel/rider/account/page.js"
+  "/sentinel/simulator/page": "app/sentinel/simulator/page.js"
 }
