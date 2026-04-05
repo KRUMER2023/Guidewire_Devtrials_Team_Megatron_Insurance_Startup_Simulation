@@ -53,6 +53,11 @@ To ensure smooth collaboration across the monorepo, follow these rules of engage
 - **Backend devs only touch `/apps/server` and `n8n`:** FastAPI logic, database schemas, and AI workflows are isolated here.
 - **Never push code that breaks the Docker build:** Ensure your containers build locally before submitting a Pull Request.
 
+N8N Temp email and password:
+
+email : parmarkrunal1805@gmail.com
+password : Megatron@2026
+
 ---
 
 ## 🚨 Troubleshooting (The "Oh No" Section)
